@@ -12,11 +12,13 @@ const completedUsersEl = document.getElementById('completedUsers');
 const lastUpdatedEl = document.getElementById('lastUpdated');
 const completedCountEl = document.getElementById('completedCount');
 const redeemedCountEl = document.getElementById('redeemedCount');
+const filterIndicator = document.querySelector('.filter-indicator');
 
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
     setupEventListeners();
     updateLastUpdated();
+    initFilterIndicator();
 });
 
 async function loadData() {
@@ -37,7 +39,11 @@ async function loadData() {
         updateStats();
         renderLeaderboard(allUsers);
         updateLastUpdated(result.data.modified);
-        showLoading(false);
+        
+        // Smooth loading transition
+        setTimeout(() => {
+            showLoading(false);
+        }, 300);
     } catch (error) {
         console.error('Error loading data:', error);
         showLoading(false);
@@ -49,19 +55,25 @@ function parseCSV(csvText) {
     const lines = csvText.trim().split('\n');
     const headers = lines[0].split(',');
     const users = [];
+    
     for (let i = 1; i < lines.length; i++) {
         const line = lines[i];
         if (!line.trim()) continue;
+        
         const values = parseCSVLine(line);
         if (values.length < headers.length) continue;
+        
         let userName = values[0]?.trim() || 'Unknown';
         const userEmail = values[1]?.trim() || '';
         const profileUrl = values[2]?.trim() || '';
+        
+        // Handle special cases
         if (userName === 'gdg.nit@gmail.com') {
             userName = 'Suman Jash';
         } else if (userName === 'https://www.cloudskillsboost.google/public_profiles/d1b5eca9-3675-41a9-bf18-b995d8622d29') {
             userName = 'Mohd Faraz';
         }
+        
         const user = {
             name: userName,
             email: userEmail,
@@ -75,8 +87,10 @@ function parseCSV(csvText) {
             gameNames: values[9]?.trim() || '',
             originalIndex: i
         };
+        
         users.push(user);
     }
+    
     return users;
 }
 
@@ -84,6 +98,7 @@ function parseCSVLine(line) {
     const result = [];
     let current = '';
     let inQuotes = false;
+    
     for (let i = 0; i < line.length; i++) {
         const char = line[i];
         if (char === '"') {
@@ -109,6 +124,7 @@ function processUsers() {
         }
         return a.originalIndex - b.originalIndex;
     });
+    
     allUsers.forEach((user, index) => {
         user.rank = index + 1;
     });
@@ -119,8 +135,10 @@ function renderLeaderboard(users) {
         showEmptyState(true);
         return;
     }
+    
     showEmptyState(false);
     leaderboardBody.innerHTML = '';
+    
     users.forEach((user, index) => {
         const row = createUserRow(user, index);
         leaderboardBody.appendChild(row);
@@ -130,35 +148,49 @@ function renderLeaderboard(users) {
 function createUserRow(user, index) {
     const tr = document.createElement('tr');
     tr.style.setProperty('--index', index);
+    
+    // Rank
     const rankTd = document.createElement('td');
     rankTd.innerHTML = getRankHTML(user.rank);
     tr.appendChild(rankTd);
+    
+    // Name
     const nameTd = document.createElement('td');
     nameTd.innerHTML = getUserInfoHTML(user);
     tr.appendChild(nameTd);
+    
+    // Badges
     const badgesTd = document.createElement('td');
     badgesTd.className = 'td-center';
     badgesTd.innerHTML = getBadgeCountHTML(user.badgesCount);
     badgesTd.title = user.badgeNames || 'No badges completed';
     tr.appendChild(badgesTd);
+    
+    // Games
     const gamesTd = document.createElement('td');
     gamesTd.className = 'td-center';
     gamesTd.innerHTML = getGameCountHTML(user.gamesCount);
     gamesTd.title = user.gameNames || 'No games completed';
     tr.appendChild(gamesTd);
+    
+    // Redeemed
     const codeTd = document.createElement('td');
     codeTd.className = 'td-center';
     codeTd.innerHTML = getRedeemedHTML(user.accessCodeRedeemed);
     tr.appendChild(codeTd);
+    
+    // Status
     const statusTd = document.createElement('td');
     statusTd.innerHTML = getStatusHTML(user);
     tr.appendChild(statusTd);
+    
     return tr;
 }
 
 function getRankHTML(rank) {
     let medal = '';
     let className = 'rank';
+    
     if (rank === 1) {
         medal = '🥇';
         className += ' top-1';
@@ -169,10 +201,11 @@ function getRankHTML(rank) {
         medal = '🥉';
         className += ' top-3';
     }
+    
     return `
         <div class="${className}">
             ${medal ? `<span class="medal">${medal}</span>` : ''}
-            <span class="rank-number">${rank}</span>
+            <span class="rank-number">#${rank}</span>
         </div>
     `;
 }
@@ -226,31 +259,82 @@ function getStatusHTML(user) {
 }
 
 function setupEventListeners() {
+    // Search with smooth animation
     searchInput.addEventListener('input', debounce(applyFilters, 300));
-    filterButtons.forEach(btn => {
+    
+    searchInput.addEventListener('focus', () => {
+        searchInput.parentElement.style.transform = 'scale(1.02)';
+    });
+    
+    searchInput.addEventListener('blur', () => {
+        searchInput.parentElement.style.transform = 'scale(1)';
+    });
+    
+    // Filter buttons with indicator animation
+    filterButtons.forEach((btn, index) => {
         btn.addEventListener('click', () => {
             filterButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentFilter = btn.dataset.filter;
+            
+            // Animate filter indicator
+            updateFilterIndicator(index);
+            
+            // Apply filters with stagger animation
             applyFilters();
         });
     });
 }
 
+function initFilterIndicator() {
+    const activeBtn = document.querySelector('.filter-btn.active');
+    if (activeBtn && filterIndicator) {
+        const btnIndex = Array.from(filterButtons).indexOf(activeBtn);
+        updateFilterIndicator(btnIndex, false);
+    }
+}
+
+function updateFilterIndicator(index, animate = true) {
+    if (!filterIndicator) return;
+    
+    const btn = filterButtons[index];
+    const btnRect = btn.getBoundingClientRect();
+    const groupRect = btn.parentElement.getBoundingClientRect();
+    
+    const left = btnRect.left - groupRect.left + 4;
+    const width = btnRect.width - 8;
+    
+    if (!animate) {
+        filterIndicator.style.transition = 'none';
+    }
+    
+    filterIndicator.style.left = `${left}px`;
+    filterIndicator.style.width = `${width}px`;
+    
+    if (!animate) {
+        setTimeout(() => {
+            filterIndicator.style.transition = '';
+        }, 50);
+    }
+}
+
 function applyFilters() {
     const query = searchInput.value.toLowerCase().trim();
     let filtered = allUsers;
+    
     if (query) {
         filtered = filtered.filter(user => 
             user.name.toLowerCase().includes(query) ||
             user.email.toLowerCase().includes(query)
         );
     }
+    
     if (currentFilter === 'completed') {
         filtered = filtered.filter(user => user.allCompleted);
     } else if (currentFilter === 'redeemed') {
         filtered = filtered.filter(user => user.accessCodeRedeemed);
     }
+    
     filteredUsers = filtered;
     renderLeaderboard(filtered);
 }
@@ -259,21 +343,29 @@ function updateStats() {
     const total = allUsers.length;
     const completed = allUsers.filter(u => u.allCompleted).length;
     const redeemed = allUsers.filter(u => u.accessCodeRedeemed).length;
-    animateValue(totalUsersEl, 0, total, 1000);
-    animateValue(completedUsersEl, 0, completed, 1000);
-    animateValue(completedCountEl, 0, completed, 1000);
-    animateValue(redeemedCountEl, 0, redeemed, 1000);
+    
+    animateValue(totalUsersEl, 0, total, 1500);
+    animateValue(completedUsersEl, 0, completed, 1500);
+    animateValue(completedCountEl, 0, completed, 1500);
+    animateValue(redeemedCountEl, 0, redeemed, 1500);
 }
 
 function animateValue(element, start, end, duration) {
     const range = end - start;
     const increment = range / (duration / 16);
     let current = start;
+    
     const timer = setInterval(() => {
         current += increment;
         if (current >= end) {
             element.textContent = end;
             clearInterval(timer);
+            
+            // Add bounce effect on completion
+            element.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                element.style.transform = 'scale(1)';
+            }, 200);
         } else {
             element.textContent = Math.floor(current);
         }
@@ -309,6 +401,9 @@ function debounce(func, wait) {
 
 function showLoading(show) {
     loadingState.style.display = show ? 'flex' : 'none';
+    if (show) {
+        loadingState.style.opacity = '1';
+    }
 }
 
 function showEmptyState(show) {
@@ -316,19 +411,70 @@ function showEmptyState(show) {
 }
 
 function updateLastUpdated(modifiedTimestamp) {
-    if (!modifiedTimestamp) return;
-    const date = new Date(modifiedTimestamp * 1000); 
-    const formatted = date.toLocaleString('en-US', {
+    const now = new Date();
+    const formatted = now.toLocaleString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
     });
-    lastUpdatedEl.textContent = formatted;
+    
+    if (modifiedTimestamp) {
+        const date = new Date(modifiedTimestamp * 1000);
+        lastUpdatedEl.textContent = date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } else {
+        lastUpdatedEl.textContent = formatted;
+    }
+    
+    // Animate the update
+    lastUpdatedEl.style.transform = 'scale(1.05)';
+    setTimeout(() => {
+        lastUpdatedEl.style.transform = 'scale(1)';
+    }, 300);
 }
 
+// Add smooth scroll behavior
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
 
+// Add intersection observer for staggered animations
+const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+        }
+    });
+}, observerOptions);
+
+// Observe fade-in elements
+document.querySelectorAll('.fade-in-up').forEach(el => {
+    observer.observe(el);
+});
+
+// Export for debugging
 window.leaderboardApp = {
     allUsers,
     filteredUsers,
