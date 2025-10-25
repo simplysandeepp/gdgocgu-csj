@@ -12,6 +12,7 @@ const completedUsersEl = document.getElementById('completedUsers');
 const lastUpdatedEl = document.getElementById('lastUpdated');
 const completedCountEl = document.getElementById('completedCount');
 const redeemedCountEl = document.getElementById('redeemedCount');
+const notRedeemedCountEl = document.getElementById('notRedeemedCount');
 const filterIndicator = document.querySelector('.filter-indicator');
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -333,6 +334,8 @@ function applyFilters() {
         filtered = filtered.filter(user => user.allCompleted);
     } else if (currentFilter === 'redeemed') {
         filtered = filtered.filter(user => user.accessCodeRedeemed);
+    } else if (currentFilter === 'not-redeemed') {
+        filtered = filtered.filter(user => !user.accessCodeRedeemed);
     }
     
     filteredUsers = filtered;
@@ -343,11 +346,13 @@ function updateStats() {
     const total = allUsers.length;
     const completed = allUsers.filter(u => u.allCompleted).length;
     const redeemed = allUsers.filter(u => u.accessCodeRedeemed).length;
+    const notRedeemed = allUsers.filter(u => !u.accessCodeRedeemed).length;
     
     animateValue(totalUsersEl, 0, total, 1500);
     animateValue(completedUsersEl, 0, completed, 1500);
     animateValue(completedCountEl, 0, completed, 1500);
     animateValue(redeemedCountEl, 0, redeemed, 1500);
+    animateValue(notRedeemedCountEl, 0, notRedeemed, 1500);
 }
 
 function animateValue(element, start, end, duration) {
