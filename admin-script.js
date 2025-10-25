@@ -5,7 +5,8 @@ const UPLOAD_API = API_BASE + 'upload.php';
 const STATS_API = API_BASE + 'api.php';
 
 const SESSION_KEY = 'gdg_admin_session';
-const SESSION_DURATION = 3600000;
+const TOKEN_KEY = 'gdg_admin_token';
+const SESSION_DURATION = 3600000; // 1 hour
 
 let loginForm, loginError, password;
 let adminDashboard, logoutBtn;
@@ -55,8 +56,9 @@ function initializeElements() {
 
 function checkSession() {
     const session = localStorage.getItem(SESSION_KEY);
+    const token = localStorage.getItem(TOKEN_KEY);
     
-    if (session) {
+    if (session && token) {
         const sessionData = JSON.parse(session);
         const now = Date.now();
         
@@ -66,18 +68,26 @@ function checkSession() {
         }
     }
     
+    // Clear expired session
+    destroySession();
     showLogin();
 }
 
-function createSession() {
+function createSession(token) {
     const sessionData = {
         timestamp: Date.now()
     };
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+    localStorage.setItem(TOKEN_KEY, token);
 }
 
 function destroySession() {
     localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+}
+
+function getToken() {
+    return localStorage.getItem(TOKEN_KEY);
 }
 
 function showLogin() {
@@ -147,40 +157,63 @@ function animateValue(element, start, end, duration) {
 
 function setupEventListeners() {
     loginForm.addEventListener('submit', handleLogin);
-    
-    // Logout button
     logoutBtn.addEventListener('click', handleLogout);
-    
-    // File input
     fileInput.addEventListener('change', handleFileSelect);
     
-    // Drag and drop
     dropZone.addEventListener('dragover', handleDragOver);
     dropZone.addEventListener('dragleave', handleDragLeave);
     dropZone.addEventListener('drop', handleDrop);
     
     uploadForm.addEventListener('submit', handleUpload);
-    
     removeFileBtn.addEventListener('click', clearFileSelection);
-    
     downloadBackup.addEventListener('click', handleDownloadBackup);
 }
 
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
     
     const enteredPassword = password.value;
+    loginError.style.display = 'none';
     
-    if (enteredPassword === ADMIN_PASSWORD) {
-        createSession();
-        showDashboard();
-        password.value = '';
-        loginError.style.display = 'none';
-    } else {
-        loginError.textContent = 'Incorrect password. Please try again.';
+    // Disable form while verifying
+    loginForm.querySelector('button').disabled = true;
+    loginForm.querySelector('button').textContent = 'Verifying...';
+    
+    try {
+        // Call the verify endpoint to get a token
+        const formData = new FormData();
+        formData.append('password', enteredPassword);
+        
+        const response = await fetch(`${UPLOAD_API}?action=verify`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.data.token) {
+            // Store token and show dashboard
+            createSession(result.data.token);
+            showDashboard();
+            password.value = '';
+        } else {
+            throw new Error(result.message || 'Invalid password');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        loginError.textContent = error.message || 'Incorrect password. Please try again.';
         loginError.style.display = 'block';
         password.value = '';
         password.focus();
+    } finally {
+        // Re-enable form
+        loginForm.querySelector('button').disabled = false;
+        loginForm.querySelector('button').innerHTML = `
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+                <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Login
+        `;
     }
 }
 
@@ -262,6 +295,13 @@ async function handleUpload(e) {
         return;
     }
     
+    const token = getToken();
+    if (!token) {
+        showError('Session expired. Please login again.');
+        handleLogout();
+        return;
+    }
+    
     hideAlerts();
     uploadBtn.disabled = true;
     uploadBtn.innerHTML = `
@@ -275,7 +315,7 @@ async function handleUpload(e) {
     try {
         const formData = new FormData();
         formData.append('file', selectedFile);
-        formData.append('password', ADMIN_PASSWORD);
+        formData.append('token', token);
         
         const response = await fetch(`${UPLOAD_API}?action=upload`, {
             method: 'POST',
@@ -285,6 +325,11 @@ async function handleUpload(e) {
         const result = await response.json();
         
         if (!result.success) {
+            if (result.message === 'Unauthorized') {
+                destroySession();
+                showLogin();
+                throw new Error('Session expired. Please login again.');
+            }
             throw new Error(result.message);
         }
         
@@ -318,51 +363,6 @@ async function handleUpload(e) {
     }
 }
 
-function readFileContent(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        
-        reader.onload = (e) => {
-            resolve(e.target.result);
-        };
-        
-        reader.onerror = () => {
-            reject(new Error('Failed to read file'));
-        };
-        
-        reader.readAsText(file);
-    });
-}
-
-function validateCSVContent(content) {
-    const lines = content.trim().split('\n');
-    
-    if (lines.length < 2) {
-        return false;
-    }
-    
-    const header = lines[0].toLowerCase();
-    const requiredColumns = ['user name', 'user email', 'profile url'];
-    
-    for (const col of requiredColumns) {
-        if (!header.includes(col)) {
-            return false;
-        }
-    }
-    
-    return true;
-}
-
-function saveCSVData(content) {
-    const data = {
-        content: content,
-        timestamp: Date.now(),
-        size: new Blob([content]).size
-    };
-    
-    localStorage.setItem('gdg_csv_data', JSON.stringify(data));
-}
-
 async function loadFileInfo() {
     try {
         const response = await fetch(`${UPLOAD_API}?action=info`);
@@ -385,8 +385,15 @@ async function loadFileInfo() {
     }
 }
 
-function handleDownloadBackup() {
-    window.location.href = `${UPLOAD_API}?action=download`;
+async function handleDownloadBackup() {
+    const token = getToken();
+    if (!token) {
+        showError('Session expired. Please login again.');
+        handleLogout();
+        return;
+    }
+    
+    window.location.href = `${UPLOAD_API}?action=download&token=${encodeURIComponent(token)}`;
 }
 
 function formatFileSize(bytes) {
