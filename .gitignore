@@ -2,3 +2,16 @@ node_modules/
 dist/
 *.log
 coverage/
+
+# Environment files
+.env
+.env.*
+
+# Runtime data
+backups/*.csv
+backups/tokens.json
+backups/inventory.json
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

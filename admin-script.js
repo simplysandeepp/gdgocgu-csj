@@ -6,6 +6,7 @@ const INFO_API = `${API_BASE}/api/admin/info`;
 const DOWNLOAD_API = `${API_BASE}/api/admin/download`;
 const INVENTORY_API = `${API_BASE}/api/admin/inventory`;
 const ALLOCATIONS_API = `${API_BASE}/api/admin/allocations`;
+const STATIC_MODE = true;
 
 const SESSION_KEY = 'gdg_admin_session';
 const TOKEN_KEY = 'gdg_admin_token';
@@ -19,7 +20,7 @@ let currentFileName, lastModified, fileSize;
 let downloadBackup, removeFileBtn;
 let previewName, previewSize;
 
-let bagInput, bottleInput, tshirtInput;
+let bagInput, bottleInput, tshirtInput, topThreeInput, topTwoInput;
 let saveInventoryBtn, refreshAllocationBtn;
 let allocationSummary, allocationTableBody;
 
@@ -63,6 +64,8 @@ function initializeElements() {
     bagInput = document.getElementById('bagCount');
     bottleInput = document.getElementById('bottleCount');
     tshirtInput = document.getElementById('tshirtCount');
+    topThreeInput = document.getElementById('topThreeCount');
+    topTwoInput = document.getElementById('topTwoCount');
     saveInventoryBtn = document.getElementById('saveInventoryBtn');
     refreshAllocationBtn = document.getElementById('refreshAllocationBtn');
     allocationSummary = document.getElementById('allocationSummary');
@@ -125,18 +128,29 @@ async function showDashboard() {
 function setupEventListeners() {
     loginForm.addEventListener('submit', handleLogin);
     logoutBtn.addEventListener('click', handleLogout);
-    fileInput.addEventListener('change', handleFileSelect);
 
-    dropZone.addEventListener('dragover', handleDragOver);
-    dropZone.addEventListener('dragleave', handleDragLeave);
-    dropZone.addEventListener('drop', handleDrop);
+    if (!STATIC_MODE) {
+        fileInput.addEventListener('change', handleFileSelect);
 
-    uploadForm.addEventListener('submit', handleUpload);
-    removeFileBtn.addEventListener('click', clearFileSelection);
+        dropZone.addEventListener('dragover', handleDragOver);
+        dropZone.addEventListener('dragleave', handleDragLeave);
+        dropZone.addEventListener('drop', handleDrop);
+
+        uploadForm.addEventListener('submit', handleUpload);
+        removeFileBtn.addEventListener('click', clearFileSelection);
+    }
+
     downloadBackup.addEventListener('click', handleDownloadBackup);
 
     saveInventoryBtn.addEventListener('click', handleSaveInventory);
     refreshAllocationBtn.addEventListener('click', loadAllocations);
+
+    if (STATIC_MODE) {
+        dropZone.style.display = 'none';
+        filePreview.style.display = 'none';
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = 'Upload Disabled (Static list.csv mode)';
+    }
 }
 
 async function handleLogin(e) {
@@ -421,6 +435,8 @@ async function loadInventory() {
         bagInput.value = result.data.bag ?? 0;
         bottleInput.value = result.data.waterBottle ?? 0;
         tshirtInput.value = result.data.tShirt ?? 0;
+        topThreeInput.value = result.data.topThreeCount ?? 30;
+        topTwoInput.value = result.data.topTwoCount ?? 20;
     } catch (error) {
         showError(error.message || 'Unable to load inventory.');
     }
@@ -441,7 +457,9 @@ async function handleSaveInventory() {
         const payload = {
             bag: Number.parseInt(bagInput.value || '0', 10) || 0,
             waterBottle: Number.parseInt(bottleInput.value || '0', 10) || 0,
-            tShirt: Number.parseInt(tshirtInput.value || '0', 10) || 0
+            tShirt: Number.parseInt(tshirtInput.value || '0', 10) || 0,
+            topThreeCount: Number.parseInt(topThreeInput.value || '0', 10) || 0,
+            topTwoCount: Number.parseInt(topTwoInput.value || '0', 10) || 0
         };
 
         const response = await fetch(INVENTORY_API, {
@@ -494,6 +512,8 @@ async function loadAllocations() {
         const summary = result.data.summary;
         allocationSummary.innerHTML = `
             <div class="summary-chip">Participants: <strong>${summary.participants}</strong></div>
+            <div class="summary-chip">Top X all-3: <strong>${summary.topThreeCount}</strong></div>
+            <div class="summary-chip">Next Y two-items: <strong>${summary.topTwoCount}</strong></div>
             <div class="summary-chip">Allocated: <strong>${summary.allocatedParticipants}</strong></div>
             <div class="summary-chip">Bag: <strong>${summary.bagGiven}</strong></div>
             <div class="summary-chip">Bottle: <strong>${summary.bottleGiven}</strong></div>

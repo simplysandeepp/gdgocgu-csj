@@ -205,8 +205,8 @@
                                 <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             <div>
-                                <h2>Upload New CSV File</h2>
-                                <p>Upload a new data.csv file to update the leaderboard</p>
+                                <h2>Static CSV Mode</h2>
+                                <p>Allocation always reads list.csv from project. Upload is disabled.</p>
                             </div>
                         </div>
 
@@ -278,12 +278,20 @@
                         <div class="allocation-header">
                             <h2>Kit Inventory & Allocation</h2>
                             <p>
-                                Rule applied: ranks 1-30 get all 3 items, ranks 31-50 get 2 random items,
-                                and remaining ranks get 1 random item from available stock.
+                                Allocation source: list.csv (single-column ranked list). Set X and Y below:
+                                top X get all 3 items, next Y get 2 random items, and remaining get 1 random item.
                             </p>
                         </div>
 
                         <div class="inventory-grid">
+                            <div class="inventory-input-group">
+                                <label for="topThreeCount">Top X (All 3 Items)</label>
+                                <input id="topThreeCount" class="form-input" type="number" min="0" value="30">
+                            </div>
+                            <div class="inventory-input-group">
+                                <label for="topTwoCount">Next Y (2 Items)</label>
+                                <input id="topTwoCount" class="form-input" type="number" min="0" value="20">
+                            </div>
                             <div class="inventory-input-group">
                                 <label for="bagCount">Bag Available</label>
                                 <input id="bagCount" class="form-input" type="number" min="0" value="0">

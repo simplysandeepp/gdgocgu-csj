@@ -22,6 +22,8 @@ type Inventory = {
   bag: number;
   waterBottle: number;
   tShirt: number;
+  topThreeCount: number;
+  topTwoCount: number;
 };
 
 type Participant = {
@@ -46,16 +48,24 @@ type AllocationRow = {
   items: string[];
 };
 
+type AllocationParticipant = {
+  rank: number;
+  name: string;
+  email: string;
+};
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 
 const csvPath = path.join(rootDir, "data.csv");
+const listCsvPath = path.join(rootDir, "list.csv");
 const backupDir = path.join(rootDir, "backups");
 const tokensPath = path.join(backupDir, "tokens.json");
 const inventoryPath = path.join(backupDir, "inventory.json");
 const adminPassword = process.env.ADMIN_PASSWORD ?? "gdg@admin2025";
 const maxFileSizeBytes = 10 * 1024 * 1024;
+const staticListMode = true;
 
 const app = express();
 const upload = multer({
@@ -191,6 +201,16 @@ app.post("/api/admin/verify", (req, res) => {
 });
 
 app.post("/api/admin/upload", authenticateAdminToken, upload.single("file"), (req, res) => {
+  if (staticListMode) {
+    return sendResponse(
+      res,
+      false,
+      "Static mode enabled. Update list.csv directly in the project; uploads are disabled.",
+      undefined,
+      400,
+    );
+  }
+
   if (!req.file) {
     return sendResponse(res, false, "No file uploaded or upload error", undefined, 400);
   }
@@ -201,48 +221,94 @@ app.post("/api/admin/upload", authenticateAdminToken, upload.single("file"), (re
   }
 
   const content = req.file.buffer.toString("utf-8");
-  if (!validateCSVContent(content)) {
+  const csvType = detectCSVType(content);
+  if (csvType === "invalid") {
     return sendResponse(
       res,
       false,
-      "Invalid CSV format. Please check your file structure.",
+      "Invalid CSV format. Upload either leaderboard data.csv (with required headers) or one-column list.csv.",
       undefined,
       400,
     );
   }
 
-  if (fs.existsSync(csvPath)) {
-    const backupName = `data_backup_${timestampLabel()}.csv`;
-    fs.copyFileSync(csvPath, path.join(backupDir, backupName));
+  const targetFileName = csvType === "leaderboard" ? "data.csv" : "list.csv";
+  const targetPath = path.join(rootDir, targetFileName);
+
+  if (fs.existsSync(targetPath)) {
+    const backupName = `${targetFileName.replace(".csv", "")}_backup_${timestampLabel()}.csv`;
+    fs.copyFileSync(targetPath, path.join(backupDir, backupName));
   }
 
-  fs.writeFileSync(csvPath, content, "utf-8");
+  fs.writeFileSync(targetPath, content, "utf-8");
 
   return sendResponse(res, true, "File uploaded successfully", {
-    filename: "data.csv",
+    filename: targetFileName,
+    type: csvType,
     size: Buffer.byteLength(content),
-    modified: Math.floor(fs.statSync(csvPath).mtimeMs / 1000),
+    modified: Math.floor(fs.statSync(targetPath).mtimeMs / 1000),
   });
 });
 
 app.get("/api/admin/info", (_req, res) => {
-  if (!fs.existsSync(csvPath)) {
+  if (staticListMode) {
+    if (!fs.existsSync(listCsvPath)) {
+      return sendResponse(res, false, "list.csv file not found", undefined, 404);
+    }
+
+    const content = fs.readFileSync(listCsvPath, "utf-8");
+    const userCount = content
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0).length;
+
+    return sendResponse(res, true, "File info retrieved", {
+      filename: "list.csv",
+      size: Buffer.byteLength(content),
+      modified: Math.floor(fs.statSync(listCsvPath).mtimeMs / 1000),
+      userCount,
+      dataFileExists: fs.existsSync(csvPath),
+      listFileExists: true,
+      staticMode: true,
+    });
+  }
+
+  const dataExists = fs.existsSync(csvPath);
+  const listExists = fs.existsSync(listCsvPath);
+
+  if (!dataExists && !listExists) {
     return sendResponse(res, false, "CSV file not found", undefined, 404);
   }
 
-  const content = fs.readFileSync(csvPath, "utf-8");
+  const targetPath = dataExists ? csvPath : listCsvPath;
+  const targetFile = dataExists ? "data.csv" : "list.csv";
+  const content = fs.readFileSync(targetPath, "utf-8");
   const parsed = parseRows(content);
-  const userCount = Math.max(0, parsed.length - 1);
+  const userCount = targetFile === "data.csv" ? Math.max(0, parsed.length - 1) : parsed.length;
 
   return sendResponse(res, true, "File info retrieved", {
-    filename: "data.csv",
+    filename: targetFile,
     size: Buffer.byteLength(content),
-    modified: Math.floor(fs.statSync(csvPath).mtimeMs / 1000),
+    modified: Math.floor(fs.statSync(targetPath).mtimeMs / 1000),
     userCount,
+    dataFileExists: dataExists,
+    listFileExists: listExists,
   });
 });
 
 app.get("/api/admin/download", authenticateAdminToken, (_req, res) => {
+  if (staticListMode) {
+    if (!fs.existsSync(listCsvPath)) {
+      return sendResponse(res, false, "list.csv file not found", undefined, 404);
+    }
+
+    const fileName = `list_backup_${timestampLabel()}.csv`;
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.send(fs.readFileSync(listCsvPath));
+    return;
+  }
+
   if (!fs.existsSync(csvPath)) {
     return sendResponse(res, false, "CSV file not found", undefined, 404);
   }
@@ -261,19 +327,27 @@ app.post("/api/admin/inventory", authenticateAdminToken, (req, res) => {
   const bag = clampNonNegativeInt(req.body?.bag);
   const waterBottle = clampNonNegativeInt(req.body?.waterBottle);
   const tShirt = clampNonNegativeInt(req.body?.tShirt);
+  const topThreeCount = clampNonNegativeInt(req.body?.topThreeCount);
+  const topTwoCount = clampNonNegativeInt(req.body?.topTwoCount);
 
-  const inventory: Inventory = { bag, waterBottle, tShirt };
+  const inventory: Inventory = {
+    bag,
+    waterBottle,
+    tShirt,
+    topThreeCount,
+    topTwoCount,
+  };
   fs.writeFileSync(inventoryPath, JSON.stringify(inventory, null, 2), "utf-8");
 
   return sendResponse(res, true, "Inventory updated", inventory);
 });
 
 app.get("/api/admin/allocations", authenticateAdminToken, (_req, res) => {
-  if (!fs.existsSync(csvPath)) {
-    return sendResponse(res, false, "CSV file not found", undefined, 404);
+  if (!fs.existsSync(listCsvPath)) {
+    return sendResponse(res, false, "list.csv file not found", undefined, 404);
   }
 
-  const participants = parseParticipants(fs.readFileSync(csvPath, "utf-8"));
+  const participants = parseAllocationParticipants(fs.readFileSync(listCsvPath, "utf-8"));
   const inventory = loadInventory();
   const result = buildAllocations(participants, inventory);
 
@@ -481,20 +555,35 @@ function removeEmailsFromCSV(csvText: string): string {
 }
 
 function validateCSVContent(csvText: string): boolean {
+  return detectCSVType(csvText) !== "invalid";
+}
+
+function detectCSVType(csvText: string): "leaderboard" | "list" | "invalid" {
   const rows = parseRows(csvText.trim());
   if (rows.length < 2) {
-    return false;
+    return "invalid";
   }
 
   const header = rows[0].join(",").toLowerCase();
   const requiredColumns = ["user name", "user email", "profile url"];
-  return requiredColumns.every((col) => header.includes(col));
+  if (requiredColumns.every((col) => header.includes(col))) {
+    return "leaderboard";
+  }
+
+  const isSingleColumn = rows.every((row) => row.length === 1 && String(row[0] ?? "").trim().length > 0);
+  if (isSingleColumn) {
+    return "list";
+  }
+
+  return "invalid";
 }
 
-function buildAllocations(participants: Participant[], inventoryInput: Inventory): {
+function buildAllocations(participants: AllocationParticipant[], inventoryInput: Inventory): {
   summary: {
     participants: number;
     allocatedParticipants: number;
+    topThreeCount: number;
+    topTwoCount: number;
     bagGiven: number;
     bottleGiven: number;
     tShirtGiven: number;
@@ -503,16 +592,19 @@ function buildAllocations(participants: Participant[], inventoryInput: Inventory
   rows: AllocationRow[];
 } {
   const inventory = { ...inventoryInput };
+  const topThreeCount = inventory.topThreeCount;
+  const topTwoCount = inventory.topTwoCount;
+  const topTwoEndRank = topThreeCount + topTwoCount;
   const rows: AllocationRow[] = [];
 
   for (const participant of participants) {
     const items: string[] = [];
 
-    if (participant.rank <= 30) {
+    if (participant.rank <= topThreeCount) {
       maybeGive("Bag", "bag", items, inventory);
       maybeGive("Water Bottle", "waterBottle", items, inventory);
       maybeGive("T-Shirt", "tShirt", items, inventory);
-    } else if (participant.rank <= 50) {
+    } else if (participant.rank <= topTwoEndRank) {
       giveRandomUniqueItems(2, items, inventory);
     } else {
       giveRandomUniqueItems(1, items, inventory);
@@ -534,6 +626,8 @@ function buildAllocations(participants: Participant[], inventoryInput: Inventory
     summary: {
       participants: participants.length,
       allocatedParticipants: rows.filter((r) => r.items.length > 0).length,
+      topThreeCount,
+      topTwoCount,
       bagGiven,
       bottleGiven,
       tShirtGiven,
@@ -589,20 +683,43 @@ function shuffle<T>(arr: T[]): void {
 function loadInventory(): Inventory {
   try {
     const raw = JSON.parse(fs.readFileSync(inventoryPath, "utf-8")) as Partial<Inventory>;
+    const topThreeCount =
+      typeof raw.topThreeCount === "number" ? clampNonNegativeInt(raw.topThreeCount) : 30;
+    const topTwoCount = typeof raw.topTwoCount === "number" ? clampNonNegativeInt(raw.topTwoCount) : 20;
+
     return {
       bag: clampNonNegativeInt(raw.bag),
       waterBottle: clampNonNegativeInt(raw.waterBottle),
       tShirt: clampNonNegativeInt(raw.tShirt),
+      topThreeCount,
+      topTwoCount,
     };
   } catch {
-    return { bag: 0, waterBottle: 0, tShirt: 0 };
+    return { bag: 0, waterBottle: 0, tShirt: 0, topThreeCount: 30, topTwoCount: 20 };
   }
 }
 
 function ensureInventoryFile(): void {
   if (!fs.existsSync(inventoryPath)) {
-    fs.writeFileSync(inventoryPath, JSON.stringify({ bag: 0, waterBottle: 0, tShirt: 0 }, null, 2), "utf-8");
+    fs.writeFileSync(
+      inventoryPath,
+      JSON.stringify({ bag: 0, waterBottle: 0, tShirt: 0, topThreeCount: 30, topTwoCount: 20 }, null, 2),
+      "utf-8",
+    );
   }
+}
+
+function parseAllocationParticipants(listCsvText: string): AllocationParticipant[] {
+  const lines = listCsvText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  return lines.map((name, index) => ({
+    rank: index + 1,
+    name,
+    email: "",
+  }));
 }
 
 function clampNonNegativeInt(value: unknown): number {
