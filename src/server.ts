@@ -78,8 +78,7 @@ const upload = multer({
 });
 const leaderboardRateLimits = new Map<string, number[]>();
 
-ensureFolder(backupDir);
-ensureInventoryFile();
+initializeRuntimeStorage();
 
 app.use(cors());
 app.use(express.json());
@@ -100,16 +99,17 @@ app.get("/api/leaderboard", (_req, res) => {
   leaderboardRateLimits.set(clientIp, recent);
 
   if (staticListMode) {
-    if (!fs.existsSync(listCsvPath)) {
+    const resolvedListPath = resolveReadableFilePath([listCsvPath, path.join(process.cwd(), "list.csv")]);
+    if (!resolvedListPath) {
       return sendResponse(res, false, "list.csv not available");
     }
 
-    const listContent = fs.readFileSync(listCsvPath, "utf-8");
+    const listContent = fs.readFileSync(resolvedListPath, "utf-8");
     const csvContent = buildLeaderboardCsvFromList(listContent);
 
     return sendResponse(res, true, "Data retrieved", {
       content: csvContent,
-      modified: Math.floor(fs.statSync(listCsvPath).mtimeMs / 1000),
+      modified: Math.floor(fs.statSync(resolvedListPath).mtimeMs / 1000),
     });
   }
 
@@ -128,11 +128,12 @@ app.get("/api/leaderboard", (_req, res) => {
 
 app.get("/api/stats", (_req, res) => {
   if (staticListMode) {
-    if (!fs.existsSync(listCsvPath)) {
+    const resolvedListPath = resolveReadableFilePath([listCsvPath, path.join(process.cwd(), "list.csv")]);
+    if (!resolvedListPath) {
       return sendResponse(res, false, "list.csv file not found");
     }
 
-    const participants = parseAllocationParticipants(fs.readFileSync(listCsvPath, "utf-8"));
+    const participants = parseAllocationParticipants(fs.readFileSync(resolvedListPath, "utf-8"));
     const total = participants.length;
 
     return sendResponse(res, true, "Statistics retrieved", {
@@ -305,11 +306,12 @@ app.post("/api/admin/upload", authenticateAdminToken, upload.single("file"), (re
 
 app.get("/api/admin/info", (_req, res) => {
   if (staticListMode) {
-    if (!fs.existsSync(listCsvPath)) {
+    const resolvedListPath = resolveReadableFilePath([listCsvPath, path.join(process.cwd(), "list.csv")]);
+    if (!resolvedListPath) {
       return sendResponse(res, false, "list.csv file not found", undefined, 404);
     }
 
-    const content = fs.readFileSync(listCsvPath, "utf-8");
+    const content = fs.readFileSync(resolvedListPath, "utf-8");
     const userCount = content
       .split(/\r?\n/)
       .map((line) => line.trim())
@@ -318,7 +320,7 @@ app.get("/api/admin/info", (_req, res) => {
     return sendResponse(res, true, "File info retrieved", {
       filename: "list.csv",
       size: Buffer.byteLength(content),
-      modified: Math.floor(fs.statSync(listCsvPath).mtimeMs / 1000),
+      modified: Math.floor(fs.statSync(resolvedListPath).mtimeMs / 1000),
       userCount,
       dataFileExists: fs.existsSync(csvPath),
       listFileExists: true,
@@ -351,14 +353,15 @@ app.get("/api/admin/info", (_req, res) => {
 
 app.get("/api/admin/download", authenticateAdminToken, (_req, res) => {
   if (staticListMode) {
-    if (!fs.existsSync(listCsvPath)) {
+    const resolvedListPath = resolveReadableFilePath([listCsvPath, path.join(process.cwd(), "list.csv")]);
+    if (!resolvedListPath) {
       return sendResponse(res, false, "list.csv file not found", undefined, 404);
     }
 
     const fileName = `list_backup_${timestampLabel()}.csv`;
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
-    res.send(fs.readFileSync(listCsvPath));
+    res.send(fs.readFileSync(resolvedListPath));
     return;
   }
 
@@ -396,11 +399,12 @@ app.post("/api/admin/inventory", authenticateAdminToken, (req, res) => {
 });
 
 app.get("/api/admin/allocations", authenticateAdminToken, (_req, res) => {
-  if (!fs.existsSync(listCsvPath)) {
+  const resolvedListPath = resolveReadableFilePath([listCsvPath, path.join(process.cwd(), "list.csv")]);
+  if (!resolvedListPath) {
     return sendResponse(res, false, "list.csv file not found", undefined, 404);
   }
 
-  const participants = parseAllocationParticipants(fs.readFileSync(listCsvPath, "utf-8"));
+  const participants = parseAllocationParticipants(fs.readFileSync(resolvedListPath, "utf-8"));
   const inventory = loadInventory();
   const result = buildAllocations(participants, inventory);
 
@@ -432,6 +436,15 @@ if (!isVercel) {
 }
 
 export default app;
+
+function initializeRuntimeStorage(): void {
+  try {
+    ensureFolder(backupDir);
+    ensureInventoryFile();
+  } catch (error) {
+    console.error("Runtime storage initialization warning:", error);
+  }
+}
 
 function sendResponse<T>(
   res: Response,
@@ -496,6 +509,8 @@ function todayISO(): string {
 }
 
 function loadTokens(): Record<string, TokenInfo> {
+  initializeRuntimeStorage();
+
   if (!fs.existsSync(tokensPath)) {
     return {};
   }
@@ -512,7 +527,12 @@ function loadTokens(): Record<string, TokenInfo> {
 }
 
 function saveTokens(tokens: Record<string, TokenInfo>): void {
-  fs.writeFileSync(tokensPath, JSON.stringify(tokens, null, 2), "utf-8");
+  try {
+    initializeRuntimeStorage();
+    fs.writeFileSync(tokensPath, JSON.stringify(tokens, null, 2), "utf-8");
+  } catch (error) {
+    console.error("Unable to persist tokens:", error);
+  }
 }
 
 function pruneExpiredTokens(tokens: Record<string, TokenInfo>, nowSec = Math.floor(Date.now() / 1000)): void {
@@ -786,6 +806,7 @@ function shuffle<T>(arr: T[]): void {
 
 function loadInventory(): Inventory {
   try {
+    initializeRuntimeStorage();
     const raw = JSON.parse(fs.readFileSync(inventoryPath, "utf-8")) as Partial<Inventory>;
     const topThreeCount =
       typeof raw.topThreeCount === "number" ? clampNonNegativeInt(raw.topThreeCount) : 30;
@@ -805,12 +826,29 @@ function loadInventory(): Inventory {
 
 function ensureInventoryFile(): void {
   if (!fs.existsSync(inventoryPath)) {
-    fs.writeFileSync(
-      inventoryPath,
-      JSON.stringify({ bag: 0, waterBottle: 0, tShirt: 0, topThreeCount: 30, topTwoCount: 20 }, null, 2),
-      "utf-8",
-    );
+    try {
+      fs.writeFileSync(
+        inventoryPath,
+        JSON.stringify({ bag: 0, waterBottle: 0, tShirt: 0, topThreeCount: 30, topTwoCount: 20 }, null, 2),
+        "utf-8",
+      );
+    } catch (error) {
+      console.error("Unable to initialize inventory file:", error);
+    }
   }
+}
+
+function resolveReadableFilePath(candidates: string[]): string | null {
+  for (const candidate of candidates) {
+    try {
+      if (fs.existsSync(candidate)) {
+        return candidate;
+      }
+    } catch {
+      // Ignore invalid/unreadable candidate and continue.
+    }
+  }
+  return null;
 }
 
 function parseAllocationParticipants(listCsvText: string): AllocationParticipant[] {
