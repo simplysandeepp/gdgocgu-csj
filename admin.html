@@ -274,6 +274,51 @@
                         </div>
                     </div>
 
+                    <div class="allocation-card">
+                        <div class="allocation-header">
+                            <h2>Kit Inventory & Allocation</h2>
+                            <p>
+                                Rule applied: ranks 1-30 get all 3 items, ranks 31-50 get 2 random items,
+                                and remaining ranks get 1 random item from available stock.
+                            </p>
+                        </div>
+
+                        <div class="inventory-grid">
+                            <div class="inventory-input-group">
+                                <label for="bagCount">Bag Available</label>
+                                <input id="bagCount" class="form-input" type="number" min="0" value="0">
+                            </div>
+                            <div class="inventory-input-group">
+                                <label for="bottleCount">Water Bottle Available</label>
+                                <input id="bottleCount" class="form-input" type="number" min="0" value="0">
+                            </div>
+                            <div class="inventory-input-group">
+                                <label for="tshirtCount">T-Shirt Available</label>
+                                <input id="tshirtCount" class="form-input" type="number" min="0" value="0">
+                            </div>
+                        </div>
+
+                        <div class="allocation-actions">
+                            <button type="button" id="saveInventoryBtn" class="btn btn-primary">Save Inventory</button>
+                            <button type="button" id="refreshAllocationBtn" class="btn btn-secondary">Refresh Allocation</button>
+                        </div>
+
+                        <div id="allocationSummary" class="allocation-summary"></div>
+
+                        <div class="allocation-table-wrapper">
+                            <table class="allocation-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Name</th>
+                                        <th>Allocated Items</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allocationTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <div class="actions-card">
                         <h3>Quick Actions</h3>
                         <div class="actions-grid">

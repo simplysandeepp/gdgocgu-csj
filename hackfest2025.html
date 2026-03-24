@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HackFest 2025 - GDG Cloud New Delhi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+            background: #fff;
+            color: #202124;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: #fff;
+            padding: 100px 20px 80px 20px;
+            text-align: center;
+            color: #202124;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 6px;
+            background: linear-gradient(90deg, 
+                #fbbc04 0%, 
+                #34a853 25%, 
+                #ea4335 50%, 
+                #4285f4 75%, 
+                #fbbc04 100%
+            );
+            -webkit-mask: 
+                linear-gradient(#fff 0 0) content-box, 
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            animation: borderRotate 4s linear infinite;
+            background-size: 200% 100%;
+        }
+
+        @keyframes borderRotate {
+            0% {
+                background-position: 0% 0%;
+            }
+            100% {
+                background-position: 200% 0%;
+            }
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(to right, #fbbc04 0%, #34a853 25%, #ea4335 50%, #4285f4 75%, #fbbc04 100%);
+            z-index: 2;
+        }
+
+        .gdg-shapes {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .shape-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .diamond {
+            width: 60px;
+            height: 60px;
+            transform: rotate(45deg);
+            border-radius: 8px;
+        }
+
+        .diamond-large {
+            width: 80px;
+            height: 80px;
+        }
+
+        .diamond-small {
+            width: 40px;
+            height: 40px;
+        }
+
+        .diamond-blue { background: #4285f4; }
+        .diamond-red { background: #ea4335; }
+        .diamond-yellow { background: #fbbc04; }
+        .diamond-green { background: #34a853; }
+
+        .gdg-icon {
+            font-size: 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .gdg-logo-img {
+            width: 120px;
+            height: auto;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .gdg-logo {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            position: relative;
+            z-index: 1;
+            color: #202124;
+        }
+
+        .logo-subtitle {
+            font-size: 20px;
+            color: #5f6368;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+            font-weight: 500;
+        }
+
+        .logo-text {
+            display: inline-block;
+        }
+
+        .logo-text span:nth-child(1) { color: #202124; }
+        .logo-text span:nth-child(2) { color: #202124; }
+        .logo-text span:nth-child(3) { color: #202124; }
+        .logo-text span:nth-child(4) { color: #202124; }
+        .logo-text span:nth-child(5) { color: #202124; }
+        .logo-text span:nth-child(6) { color: #202124; }
+        .logo-text span:nth-child(7) { color: #202124; }
+        .logo-text span:nth-child(8) { color: #202124; }
+        .logo-text span:nth-child(9) { color: #202124; }
+        .logo-text span:nth-child(10) { color: #202124; }
+        .logo-text span:nth-child(11) { color: #202124; }
+        .logo-text span:nth-child(12) { color: #202124; }
+        .logo-text span:nth-child(13) { color: #202124; }
+        .logo-text span:nth-child(14) { color: #202124; }
+        .logo-text span:nth-child(15) { color: #202124; }
+        .logo-text span:nth-child(16) { color: #202124; }
+        .logo-text span:nth-child(17) { color: #202124; }
+        .logo-text span:nth-child(18) { color: #202124; }
+        .logo-text span:nth-child(19) { color: #202124; }
+        .logo-text span:nth-child(20) { color: #202124; }
+        .logo-text span:nth-child(21) { color: #202124; }
+        .logo-text span:nth-child(22) { color: #202124; }
+        .logo-text span:nth-child(23) { color: #202124; }
+
+        .event-title {
+            font-size: 72px;
+            font-weight: 700;
+            margin: 30px 0 20px 0;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 50%, #fbbc04 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .collab-text {
+            font-size: 18px;
+            color: #9aa0a6;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .collab-text span {
+            color: #4285f4;
+            font-weight: 600;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 12px 32px;
+            background: #4285f4;
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.4);
+            background: #3367d6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .section {
+            margin-bottom: 60px;
+        }
+
+        .section-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #202124;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .color-bar {
+            width: 5px;
+            height: 40px;
+            background: linear-gradient(to bottom, #4285f4, #ea4335, #fbbc04, #34a853);
+            border-radius: 3px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .info-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 4px solid #4285f4;
+        }
+
+        .info-card:nth-child(2) { border-left-color: #ea4335; }
+        .info-card:nth-child(3) { border-left-color: #fbbc04; }
+        .info-card:nth-child(4) { border-left-color: #34a853; }
+
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .info-card-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+
+        .info-card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #202124;
+        }
+
+        .info-card-content {
+            color: #5f6368;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .prizes {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e8f0fe 100%);
+            padding: 50px 30px;
+            border-radius: 16px;
+            margin-top: 30px;
+        }
+
+        .prize-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .prize-card {
+            background: white;
+            padding: 35px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .prize-card:hover {
+            transform: scale(1.05);
+        }
+
+        .prize-medal {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .prize-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #4285f4;
+            margin-bottom: 10px;
+        }
+
+        .prize-description {
+            color: #5f6368;
+            font-size: 16px;
+        }
+
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            background: #e8f0fe;
+        }
+
+        .feature-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+        }
+
+        .feature-text {
+            color: #202124;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .partners {
+            background: #f8f9fa;
+            padding: 50px 30px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .partners-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .partner-logo {
+            font-size: 24px;
+            font-weight: 600;
+            padding: 20px 35px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .contact-section {
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white;
+            padding: 50px 30px;
+            border-radius: 16px;
+            margin-top: 40px;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .contact-card {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .contact-name {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .contact-role {
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .contact-phone {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: #202124;
+            color: white;
+            margin-top: 60px;
+        }
+
+        .faq-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .faq-question {
+            padding: 20px 25px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #202124;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .faq-question:hover {
+            background: #f8f9fa;
+        }
+
+        .faq-toggle {
+            font-size: 24px;
+            color: #4285f4;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-answer {
+            padding: 0 25px;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            color: #5f6368;
+            line-height: 1.6;
+        }
+
+        .faq-answer.active {
+            padding: 0 25px 20px 25px;
+            max-height: 500px;
+        }
+
+        .faq-item.active .faq-toggle {
+            transform: rotate(180deg);
+        }
+
+        /* Tablet Devices (768px - 1024px) */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 40px 20px;
+            }
+
+            .info-grid {
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            }
+
+            .prize-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        /* Mobile Devices (max-width: 768px) */
+        @media (max-width: 768px) {
+            .header {
+                padding: 60px 15px 50px 15px;
+            }
+
+            .gdg-logo-img {
+                width: 80px;
+            }
+
+            .event-title {
+                font-size: 42px;
+                margin: 20px 0 15px 0;
+            }
+
+            .gdg-logo {
+                font-size: 24px;
+            }
+
+            .logo-subtitle {
+                font-size: 16px;
+                margin-bottom: 30px;
+            }
+
+            .collab-text {
+                font-size: 14px;
+            }
+
+            .cta-button {
+                padding: 10px 28px;
+                font-size: 14px;
+            }
+
+            .container {
+                padding: 40px 15px;
+            }
+
+            .section {
+                margin-bottom: 40px;
+            }
+
+            .section-title {
+                font-size: 26px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .info-card {
+                padding: 25px;
+            }
+
+            .features-list {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .prize-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .prizes {
+                padding: 30px 20px;
+            }
+
+            .partners-logos {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .partner-logo {
+                width: 100%;
+                text-align: center;
+            }
+
+            .contact-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .faq-question {
+                font-size: 16px;
+                padding: 15px 20px;
+            }
+
+            .faq-answer {
+                padding: 0 20px;
+                font-size: 14px;
+            }
+
+            .faq-answer.active {
+                padding: 0 20px 15px 20px;
+            }
+        }
+
+        /* Small Mobile Devices (max-width: 480px) */
+        @media (max-width: 480px) {
+            .header {
+                padding: 50px 10px 40px 10px;
+            }
+
+            .gdg-logo-img {
+                width: 70px;
+            }
+
+            .event-title {
+                font-size: 32px;
+            }
+
+            .gdg-logo {
+                font-size: 20px;
+            }
+
+            .logo-subtitle {
+                font-size: 14px;
+            }
+
+            .collab-text {
+                font-size: 13px;
+            }
+
+            .section-title {
+                font-size: 22px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .color-bar {
+                width: 40px;
+                height: 4px;
+            }
+
+            .info-card-icon {
+                font-size: 32px;
+            }
+
+            .info-card-title {
+                font-size: 18px;
+            }
+
+            .prize-medal {
+                font-size: 48px;
+            }
+
+            .prize-amount {
+                font-size: 28px;
+            }
+
+            .feature-icon {
+                font-size: 24px;
+            }
+
+            .contact-section {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <img src="gdglogo.png" alt="GDG Logo" class="gdg-logo-img">
+        
+        <div class="gdg-logo">
+            Google Developer Group
+        </div>
+        <p class="logo-subtitle">Cloud New Delhi</p>
+        
+        <h1 class="event-title">HackFest 2025</h1>
+        <p class="collab-text">In Collaboration with <span>GDG on Campus - Galgotias University</span></p>
+        <a href="https://gdgcloudnd.short.gy/hackfest-agora" class="cta-button" target="_blank">Register Now →</a>
+    </header>
+
+    <div class="container">
+        <section class="section">
+            <h2 class="section-title">
+                <div class="color-bar"></div>
+                About HackFest 2025
+            </h2>
+            <p style="font-size: 18px; line-height: 1.8; color: #5f6368; margin-bottom: 25px;">
+                Get ready to innovate, collaborate, and build! GDG Cloud New Delhi, in collaboration with Agora, is hosting an exciting hackathon designed to bring developers, designers, and innovators together to create impactful real-time experiences.
+            </p>
+            <p style="font-size: 18px; line-height: 1.8; color: #5f6368; margin-bottom: 25px;">
+                Participants will work in teams to brainstorm, prototype, and build functional solutions over an intense two-day sprint. This hackathon aims to challenge your creativity and technical skills as you explore cloud technologies, conversational AI, and cutting-edge communication tools.
+            </p>
+            <p style="font-size: 18px; line-height: 1.8; color: #5f6368; margin-bottom: 25px;">
+                Expect mentorship from industry experts, networking opportunities with like-minded developers, and exciting prizes for the most innovative solutions. Whether you're a student or a professional, this is your chance to learn, collaborate, and showcase your ideas on a big stage.
+            </p>
+            <p style="font-size: 20px; line-height: 1.8; color: #4285f4; font-weight: 600; text-align: center;">
+                Come with ideas, leave with innovation.
+            </p>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-card-icon">📅</div>
+                    <div class="info-card-title">Date</div>
+                    <div class="info-card-content">14–15 November 2025</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-icon">🌐</div>
+                    <div class="info-card-title">Mode</div>
+                    <div class="info-card-content">Online (Global)</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-icon">👥</div>
+                    <div class="info-card-title">Team Size</div>
+                    <div class="info-card-content">2–4 Members</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-card-icon">⏰</div>
+                    <div class="info-card-title">Duration</div>
+                    <div class="info-card-content">24 Hours</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">
+                <div class="color-bar"></div>
+                Hackathon Tracks
+            </h2>
+            <p style="font-size: 18px; line-height: 1.8; color: #5f6368; margin-bottom: 30px;">
+                Choose your track and explore problem statements on our <a href="https://github.com/GDG-Cloud-New-Delhi/Agora-x-HackFest-PS" target="_blank" style="color: #4285f4; text-decoration: none; font-weight: 600;">GitHub repository</a>.
+            </p>
+            
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-icon">🏥</div>
+                    <div class="feature-text">
+                        <strong style="font-size: 18px; display: block; margin-bottom: 8px; color: #4285f4;">Healthcare & Wellbeing</strong>
+                        Build conversational solutions that improve patient care, medication adherence, and healthcare accessibility through intelligent voice and chat interactions.
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">💼</div>
+                    <div class="feature-text">
+                        <strong style="font-size: 18px; display: block; margin-bottom: 8px; color: #ea4335;">Smart Productivity & Organization</strong>
+                        Develop AI assistants that streamline professional tasks, optimize personal finances, and enhance decision-making through natural conversations.
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📚</div>
+                    <div class="feature-text">
+                        <strong style="font-size: 18px; display: block; margin-bottom: 8px; color: #fbbc04;">Next-Gen Learning & Assistance</strong>
+                        Create intelligent tutors and assistants that personalize learning experiences, break language barriers, and simplify everyday tasks through conversational interfaces.
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🤝</div>
+                    <div class="feature-text">
+                        <strong style="font-size: 18px; display: block; margin-bottom: 8px; color: #34a853;">Social & Community</strong>
+                        Design conversational tools that strengthen communities, support mental wellness, and facilitate civic engagement through empathetic and accessible interactions.
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🛍️</div>
+                    <div class="feature-text">
+                        <strong style="font-size: 18px; display: block; margin-bottom: 8px; color: #4285f4;">Business & Commerce</strong>
+                        Transform customer experiences and business operations with conversational agents that automate support, manage inventory, and qualify leads efficiently.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">
+                <div class="color-bar"></div>
+                What You'll Build
+            </h2>
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-icon">🤖</div>
+                    <div class="feature-text">Build AI chatbots, voice assistants, and real-time communication tools that redefine human–tech interaction</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🤝</div>
+                    <div class="feature-text">Collaborate directly with GDG Cloud New Delhi community leaders</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🌍</div>
+                    <div class="feature-text">Connect with innovators, developers, and creators from around the world</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">💡</div>
+                    <div class="feature-text">Work on real-world AI challenges with industry mentorship</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-text">24 hours of building, learning, and networking with fellow developers</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-text">Get mentorship and visibility from industry experts</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">
+                <div class="color-bar"></div>
+                Exciting Prizes & Rewards
+            </h2>
+            <div class="prizes">
+                <div class="prize-grid">
+                    <div class="prize-card">
+                        <div class="prize-medal">🥇</div>
+                        <div class="prize-amount">$1000</div>
+                        <div class="prize-description">Winner + Swag Kit</div>
+                    </div>
+                    <div class="prize-card">
+                        <div class="prize-medal">🥈</div>
+                        <div class="prize-amount">$750</div>
+                        <div class="prize-description">1st Runner Up + Swag Kit</div>
+                    </div>
+                    <div class="prize-card">
+                        <div class="prize-medal">🥉</div>
+                        <div class="prize-amount">$500</div>
+                        <div class="prize-description">2nd Runner Up + Swag Kit</div>
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 30px; font-size: 20px; font-weight: 600; color: #202124;">
+                    ✨ Top 10 teams get exclusive goodies!
+                </p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">
+                <div class="color-bar"></div>
+                Community Partners
+            </h2>
+            <div class="partners">
+                <div class="partners-logos">
+                    <div class="partner-logo">GDG Cloud New Delhi</div>
+                    <div class="partner-logo">Agora</div>
+                    <div class="partner-logo">GDG on Campus - Galgotias University</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">
+                <div class="color-bar"></div>
+                Frequently Asked Questions
+            </h2>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>What should I do after filling the registration form?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        After completing your registration, make sure your teammates also confirm their participation. Ask each teammate to accept the HackFest invite sent to the email addresses you entered in the registration form. Their confirmation is necessary for the team to be officially registered.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>How will communication happen during the hackathon?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        We'll use Commudle for official announcements, team coordination, and project submissions. Mentorship and support will be provided via Whatsapp/Discord channels.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Will participants get certificates?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Yes! All valid participants who submit their projects before the deadline will receive a certificate of participation from GDG Cloud New Delhi and Agora.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>What technologies can we use?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        You're free to use any tech stack that best fits your idea. However, integration of Agora's Conversational AI is mandatory for all submissions.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Where will the hackathon take place?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        It's a completely online event. Participants can join from anywhere in the world using their laptops and internet connection. All communication and submissions will be managed through Commudle Platform.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Is there any participation fee?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        No, participation in HackFest is completely free of charge. There are no registration or entry fees.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Will there be mentorship?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Yes, mentors from the industry and experts will guide teams throughout the event.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>What is the main focus of the hackathon?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        All solutions must integrate Agora's Conversational AI as a core part of the project. Creativity, innovation, and real-world impact are highly encouraged.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>What is the team size?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Teams should have a minimum of 2 members and a maximum of 4 members.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Do I need a team to register?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        You can register as a team leader. Give your team a name, and add your teammate's email. A confirmation email will be sent to your teammate's email. Ask them to confirm their participation in the hackathon and complete the Commudle profile.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>Who can participate in the hackathon?</span>
+                        <span class="faq-toggle">▼</span>
+                    </div>
+                    <div class="faq-answer">
+                        Anyone with an interest in technology—students, developers, designers, and professionals—is welcome to participate, regardless of experience level.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="contact-section">
+                <h2 style="font-size: 32px; margin-bottom: 10px;">Got Questions?</h2>
+                <p style="opacity: 0.95; margin-bottom: 20px;">Reach out to the organizing team from GDGoC GU</p>
+                <div class="contact-grid">
+                    <div class="contact-card">
+                        <div class="contact-name">Vanshika Prakash</div>
+                        <div class="contact-role">Organizer, GDGoC GU</div>
+                        <div class="contact-phone">📱 6396957534</div>
+                    </div>
+                    <div class="contact-card">
+                        <div class="contact-name">Khushi Rawat</div>
+                        <div class="contact-role">Outreach Lead, GDGoC GU</div>
+                        <div class="contact-phone">📱 9719902220</div>
+                    </div>
+                </div>
+                <p style="margin-top: 30px; font-size: 16px; opacity: 0.9;">
+                    <strong>Important:</strong> Mention "GDGoC GU" as your organization while registering!
+                </p>
+            </div>
+        </section>
+
+        <div style="text-align: center; margin: 60px 0;">
+            <a href="https://gdgcloudnd.short.gy/hackfest-agora" class="cta-button" target="_blank">
+                🚀 Register for HackFest 2025
+            </a>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p style="font-size: 18px; margin-bottom: 10px;">HackFest 2025 - GDG Cloud New Delhi</p>
+        <p style="opacity: 0.8;">Powered by Google Developer Groups & Agora</p>
+        <p style="margin-top: 20px; opacity: 0.7;">Community Partner: GDG on Campus - Galgotias University</p>
+    </footer>
+
+    <script>
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.info-card, .prize-card, .feature-item').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'all 0.6s ease';
+            observer.observe(el);
+        });
+
+        // CTA Button pulse animation
+        const ctaButtons = document.querySelectorAll('.cta-button');
+        setInterval(() => {
+            ctaButtons.forEach(btn => {
+                btn.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    btn.style.transform = 'scale(1)';
+                }, 200);
+            });
+        }, 3000);
+
+        // FAQ Accordion
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const faqItem = question.parentElement;
+                const answer = question.nextElementSibling;
+                const isActive = faqItem.classList.contains('active');
+
+                // Close all other FAQs
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    item.classList.remove('active');
+                    item.querySelector('.faq-answer').classList.remove('active');
+                });
+
+                // Toggle current FAQ
+                if (!isActive) {
+                    faqItem.classList.add('active');
+                    answer.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

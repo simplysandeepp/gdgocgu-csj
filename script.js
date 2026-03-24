@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadData() {
     try {
         showLoading(true);
-        const response = await fetch('api.php?action=leaderboard');
+        const response = await fetch('/api/leaderboard');
         if (!response.ok) {
             throw new Error('Failed to load data');
         }
@@ -49,6 +49,7 @@ async function loadData() {
         console.error('Error loading data:', error);
         showLoading(false);
         showEmptyState(true);
+        showToast(error.message || 'Unable to load leaderboard data right now.');
     }
 }
 
@@ -413,6 +414,33 @@ function showLoading(show) {
 
 function showEmptyState(show) {
     emptyState.style.display = show ? 'flex' : 'none';
+}
+
+function showToast(message) {
+    let toast = document.getElementById('apiToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'apiToast';
+        toast.style.position = 'fixed';
+        toast.style.right = '20px';
+        toast.style.bottom = '20px';
+        toast.style.padding = '10px 14px';
+        toast.style.background = '#1f2937';
+        toast.style.color = '#fff';
+        toast.style.borderRadius = '8px';
+        toast.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)';
+        toast.style.zIndex = '9999';
+        toast.style.fontSize = '0.9rem';
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 180ms ease';
+        document.body.appendChild(toast);
+    }
+
+    toast.textContent = message;
+    toast.style.opacity = '1';
+    setTimeout(() => {
+        toast.style.opacity = '0';
+    }, 3200);
 }
 
 function updateLastUpdated(modifiedTimestamp) {
