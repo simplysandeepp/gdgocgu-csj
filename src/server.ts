@@ -14,11 +14,6 @@ type ApiResponse<T = unknown> = {
   data?: T;
 };
 
-type TokenInfo = {
-  expires: number;
-  ip: string;
-};
-
 type Inventory = {
   bag: number;
   waterBottle: number;
@@ -64,9 +59,9 @@ const runtimeRoot = isVercel ? "/tmp/gdgocgu-csj" : rootDir;
 const csvPath = path.join(rootDir, "data.csv");
 const listCsvPath = path.join(rootDir, "list.csv");
 const backupDir = path.join(runtimeRoot, "backups");
-const tokensPath = path.join(backupDir, "tokens.json");
 const inventoryPath = path.join(backupDir, "inventory.json");
 const adminPassword = process.env.ADMIN_PASSWORD ?? "";
+const adminTokenSecret = process.env.ADMIN_TOKEN_SECRET ?? adminPassword;
 const adminDailyTokenSeed = process.env.ADMIN_DAILY_TOKEN_SEED ?? adminPassword;
 const maxFileSizeBytes = 10 * 1024 * 1024;
 const staticListMode = true;
@@ -238,18 +233,17 @@ app.post("/api/admin/verify", (req, res) => {
     return sendResponse(res, false, "ADMIN_PASSWORD is not configured on server", undefined, 500);
   }
 
+  if (!adminTokenSecret) {
+    return sendResponse(res, false, "ADMIN_TOKEN_SECRET is not configured on server", undefined, 500);
+  }
+
   const password = String(req.body?.password ?? "");
   if (!password || password !== adminPassword) {
     return sendResponse(res, false, "Invalid password", undefined, 401);
   }
 
-  const token = crypto.randomBytes(32).toString("hex");
   const expires = Math.floor(Date.now() / 1000) + 3600;
-  const ip = getClientIp(req);
-
-  const tokens = loadTokens();
-  tokens[token] = { expires, ip };
-  saveTokens(tokens);
+  const token = createAdminSessionToken(expires);
 
   return sendResponse(res, true, "Password verified", { token, expires });
 });
@@ -466,14 +460,7 @@ function authenticateAdminToken(req: Request, res: Response, next: NextFunction)
     return sendResponse(res, false, "Unauthorized", undefined, 401);
   }
 
-  const tokens = loadTokens();
-  const info = tokens[token];
-  const now = Math.floor(Date.now() / 1000);
-  const ip = getClientIp(req);
-
-  pruneExpiredTokens(tokens, now);
-
-  if (!info || info.expires < now || info.ip !== ip) {
+  if (!verifyAdminSessionToken(token)) {
     return sendResponse(res, false, "Unauthorized", undefined, 401);
   }
 
@@ -508,44 +495,39 @@ function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function loadTokens(): Record<string, TokenInfo> {
-  initializeRuntimeStorage();
-
-  if (!fs.existsSync(tokensPath)) {
-    return {};
-  }
-
-  try {
-    const parsed = JSON.parse(fs.readFileSync(tokensPath, "utf-8")) as Record<string, TokenInfo>;
-    if (!parsed || typeof parsed !== "object") {
-      return {};
-    }
-    return parsed;
-  } catch {
-    return {};
-  }
+function createAdminSessionToken(expires: number): string {
+  const nonce = crypto.randomBytes(12).toString("hex");
+  const payload = `${expires}.${nonce}`;
+  const signature = crypto.createHmac("sha256", adminTokenSecret).update(payload).digest("hex");
+  return `${payload}.${signature}`;
 }
 
-function saveTokens(tokens: Record<string, TokenInfo>): void {
-  try {
-    initializeRuntimeStorage();
-    fs.writeFileSync(tokensPath, JSON.stringify(tokens, null, 2), "utf-8");
-  } catch (error) {
-    console.error("Unable to persist tokens:", error);
+function verifyAdminSessionToken(token: string): boolean {
+  if (!adminTokenSecret) {
+    return false;
   }
-}
 
-function pruneExpiredTokens(tokens: Record<string, TokenInfo>, nowSec = Math.floor(Date.now() / 1000)): void {
-  let changed = false;
-  for (const [token, info] of Object.entries(tokens)) {
-    if (!info || info.expires < nowSec) {
-      delete tokens[token];
-      changed = true;
-    }
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    return false;
   }
-  if (changed) {
-    saveTokens(tokens);
+
+  const [expiresPart, nonce, signature] = parts;
+  const expires = Number.parseInt(expiresPart, 10);
+  if (!Number.isFinite(expires) || expires < Math.floor(Date.now() / 1000)) {
+    return false;
   }
+
+  const payload = `${expires}.${nonce}`;
+  const expected = crypto.createHmac("sha256", adminTokenSecret).update(payload).digest("hex");
+
+  const expectedBuffer = Buffer.from(expected, "hex");
+  const providedBuffer = Buffer.from(signature, "hex");
+  if (expectedBuffer.length !== providedBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expectedBuffer, providedBuffer);
 }
 
 function parseRows(csvText: string): string[][] {
