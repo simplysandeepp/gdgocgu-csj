@@ -449,7 +449,6 @@ body {
 
 
 .info-card,
-.upload-card,
 .actions-card,
 .allocation-card {
     background: var(--white);
@@ -517,6 +516,36 @@ body {
     color: var(--gray-900);
     font-weight: 500;
     font-size: 0.9375rem;
+}
+
+.goodies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-4);
+}
+
+.goodie-item {
+    background: var(--gray-50);
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.goodie-label {
+    font-size: 0.82rem;
+    color: var(--gray-600);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.goodie-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--gray-900);
 }
 
 .upload-form {
@@ -805,7 +834,6 @@ body {
     }
     
     .info-card,
-    .upload-card,
     .actions-card,
     .allocation-card {
         padding: var(--space-6);

@@ -199,78 +199,53 @@
                         </div>
                     </div>
 
-                    <div class="upload-card">
-                        <div class="upload-header">
-                            <svg class="upload-icon" viewBox="0 0 24 24" fill="none">
-                                <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <div class="info-card">
+                        <div class="info-header">
+                            <svg class="info-icon" viewBox="0 0 24 24" fill="none">
+                                <path d="M20 12V8H4v4m16 0v4H4v-4m16 0h-3m-10 0H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                             <div>
-                                <h2>Static CSV Mode</h2>
-                                <p>Allocation always reads list.csv from project. Upload is disabled.</p>
+                                <h2>Goodies Quantity</h2>
+                                <p>Live quantities from local inventory settings</p>
                             </div>
                         </div>
-
-                        <form id="uploadForm" class="upload-form">
-                            <div class="file-drop-zone" id="dropZone">
-                                <svg class="drop-icon" viewBox="0 0 24 24" fill="none">
-                                    <path d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <p class="drop-text">Drag and drop your CSV file here</p>
-                                <p class="drop-subtext">or</p>
-                                <label for="fileInput" class="btn btn-outline">
-                                    Browse Files
-                                </label>
-                                <input 
-                                    type="file" 
-                                    id="fileInput" 
-                                    accept=".csv"
-                                    style="display: none;"
-                                >
+                        <div class="goodies-grid">
+                            <div class="goodie-item">
+                                <span class="goodie-label">Bags</span>
+                                <span class="goodie-value" id="goodiesBag">0</span>
                             </div>
-
-                            <div id="filePreview" class="file-preview" style="display: none;">
-                                <div class="preview-header">
-                                    <svg class="preview-icon" viewBox="0 0 24 24" fill="none">
-                                        <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                    <div class="preview-info">
-                                        <p class="preview-name" id="previewName"></p>
-                                        <p class="preview-size" id="previewSize"></p>
-                                    </div>
-                                    <button type="button" id="removeFile" class="btn-remove">
-                                        <svg viewBox="0 0 24 24" fill="none">
-                                            <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                    </button>
-                                </div>
+                            <div class="goodie-item">
+                                <span class="goodie-label">Water Bottles</span>
+                                <span class="goodie-value" id="goodiesBottle">0</span>
                             </div>
-
-                            <button type="submit" id="uploadBtn" class="btn btn-primary btn-large" disabled>
-                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
-                                    <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                Upload & Replace
-                            </button>
-                        </form>
-
-                        <div id="uploadSuccess" class="alert alert-success" style="display: none;">
-                            <svg class="alert-icon" viewBox="0 0 24 24" fill="none">
-                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <div>
-                                <p class="alert-title">Upload Successful!</p>
-                                <p class="alert-message">The leaderboard data has been updated.</p>
+                            <div class="goodie-item">
+                                <span class="goodie-label">T-Shirts</span>
+                                <span class="goodie-value" id="goodiesTshirt">0</span>
+                            </div>
+                            <div class="goodie-item">
+                                <span class="goodie-label">Total Goodies</span>
+                                <span class="goodie-value" id="goodiesTotal">0</span>
                             </div>
                         </div>
+                    </div>
 
-                        <div id="uploadError" class="alert alert-error" style="display: none;">
-                            <svg class="alert-icon" viewBox="0 0 24 24" fill="none">
-                                <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            <div>
-                                <p class="alert-title">Upload Failed</p>
-                                <p class="alert-message" id="errorMessage"></p>
-                            </div>
+                    <div id="uploadSuccess" class="alert alert-success" style="display: none;">
+                        <svg class="alert-icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <div>
+                            <p class="alert-title">Saved</p>
+                            <p class="alert-message">Inventory updated successfully.</p>
+                        </div>
+                    </div>
+
+                    <div id="uploadError" class="alert alert-error" style="display: none;">
+                        <svg class="alert-icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <div>
+                            <p class="alert-title">Action Failed</p>
+                            <p class="alert-message" id="errorMessage"></p>
                         </div>
                     </div>
 

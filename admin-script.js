@@ -1,12 +1,10 @@
 const API_BASE = window.location.origin;
 const VERIFY_API = `${API_BASE}/api/admin/verify`;
-const UPLOAD_API = `${API_BASE}/api/admin/upload`;
 const STATS_API = `${API_BASE}/api/stats`;
 const INFO_API = `${API_BASE}/api/admin/info`;
 const DOWNLOAD_API = `${API_BASE}/api/admin/download`;
 const INVENTORY_API = `${API_BASE}/api/admin/inventory`;
 const ALLOCATIONS_API = `${API_BASE}/api/admin/allocations`;
-const STATIC_MODE = true;
 
 const SESSION_KEY = 'gdg_admin_session';
 const TOKEN_KEY = 'gdg_admin_token';
@@ -14,17 +12,14 @@ const SESSION_DURATION = 3600000;
 
 let loginForm, loginError, password;
 let adminDashboard, logoutBtn;
-let dropZone, fileInput, filePreview, uploadForm, uploadBtn;
 let uploadSuccess, uploadError, errorMessage;
 let currentFileName, lastModified, fileSize;
-let downloadBackup, removeFileBtn;
-let previewName, previewSize;
+let downloadBackup;
+let goodiesBag, goodiesBottle, goodiesTshirt, goodiesTotal;
 
 let bagInput, bottleInput, tshirtInput, topThreeInput, topTwoInput;
 let saveInventoryBtn, refreshAllocationBtn;
 let allocationSummary, allocationTableBody;
-
-let selectedFile = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeElements();
@@ -41,13 +36,6 @@ function initializeElements() {
     adminDashboard = document.getElementById('adminDashboard');
     logoutBtn = document.getElementById('logoutBtn');
 
-    dropZone = document.getElementById('dropZone');
-    fileInput = document.getElementById('fileInput');
-    filePreview = document.getElementById('filePreview');
-    uploadForm = document.getElementById('uploadForm');
-    uploadBtn = document.getElementById('uploadBtn');
-    removeFileBtn = document.getElementById('removeFile');
-
     uploadSuccess = document.getElementById('uploadSuccess');
     uploadError = document.getElementById('uploadError');
     errorMessage = document.getElementById('errorMessage');
@@ -55,9 +43,10 @@ function initializeElements() {
     currentFileName = document.getElementById('currentFileName');
     lastModified = document.getElementById('lastModified');
     fileSize = document.getElementById('fileSize');
-
-    previewName = document.getElementById('previewName');
-    previewSize = document.getElementById('previewSize');
+    goodiesBag = document.getElementById('goodiesBag');
+    goodiesBottle = document.getElementById('goodiesBottle');
+    goodiesTshirt = document.getElementById('goodiesTshirt');
+    goodiesTotal = document.getElementById('goodiesTotal');
 
     downloadBackup = document.getElementById('downloadBackup');
 
@@ -129,28 +118,10 @@ function setupEventListeners() {
     loginForm.addEventListener('submit', handleLogin);
     logoutBtn.addEventListener('click', handleLogout);
 
-    if (!STATIC_MODE) {
-        fileInput.addEventListener('change', handleFileSelect);
-
-        dropZone.addEventListener('dragover', handleDragOver);
-        dropZone.addEventListener('dragleave', handleDragLeave);
-        dropZone.addEventListener('drop', handleDrop);
-
-        uploadForm.addEventListener('submit', handleUpload);
-        removeFileBtn.addEventListener('click', clearFileSelection);
-    }
-
     downloadBackup.addEventListener('click', handleDownloadBackup);
 
     saveInventoryBtn.addEventListener('click', handleSaveInventory);
     refreshAllocationBtn.addEventListener('click', loadAllocations);
-
-    if (STATIC_MODE) {
-        dropZone.style.display = 'none';
-        filePreview.style.display = 'none';
-        uploadBtn.disabled = true;
-        uploadBtn.textContent = 'Upload Disabled (Static list.csv mode)';
-    }
 }
 
 async function handleLogin(e) {
@@ -200,7 +171,6 @@ async function handleLogin(e) {
 function handleLogout() {
     destroySession();
     showLogin();
-    clearFileSelection();
     hideAlerts();
 }
 
@@ -256,136 +226,6 @@ function animateValue(element, start, end, duration) {
     }, 16);
 }
 
-function handleFileSelect(e) {
-    const file = e.target.files[0];
-    if (file) {
-        validateAndSetFile(file);
-    }
-}
-
-function handleDragOver(e) {
-    e.preventDefault();
-    dropZone.classList.add('drag-over');
-}
-
-function handleDragLeave(e) {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-}
-
-function handleDrop(e) {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-
-    const file = e.dataTransfer.files[0];
-    if (file) {
-        validateAndSetFile(file);
-    }
-}
-
-function validateAndSetFile(file) {
-    hideAlerts();
-
-    if (!file.name.toLowerCase().endsWith('.csv')) {
-        showError('Please select a valid CSV file.');
-        return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-        showError('File size must be less than 10MB.');
-        return;
-    }
-
-    selectedFile = file;
-    showFilePreview(file);
-    uploadBtn.disabled = false;
-}
-
-function showFilePreview(file) {
-    previewName.textContent = file.name;
-    previewSize.textContent = formatFileSize(file.size);
-
-    dropZone.style.display = 'none';
-    filePreview.style.display = 'block';
-}
-
-function clearFileSelection() {
-    selectedFile = null;
-    fileInput.value = '';
-
-    dropZone.style.display = 'flex';
-    filePreview.style.display = 'none';
-    uploadBtn.disabled = true;
-    hideAlerts();
-}
-
-async function handleUpload(e) {
-    e.preventDefault();
-
-    if (!selectedFile) {
-        showError('Please select a file first.');
-        return;
-    }
-
-    const token = getToken();
-    if (!token) {
-        showError('Session expired. Please login again.');
-        handleLogout();
-        return;
-    }
-
-    hideAlerts();
-    uploadBtn.disabled = true;
-    uploadBtn.innerHTML = `
-        <svg class="btn-icon" style="animation: spin 1s linear infinite;" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
-            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-        </svg>
-        Uploading...
-    `;
-
-    try {
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-
-        const response = await fetch(UPLOAD_API, {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${token}`
-            },
-            body: formData
-        });
-
-        const result = await response.json();
-
-        if (!result.success) {
-            if (result.message === 'Unauthorized') {
-                handleLogout();
-                throw new Error('Session expired. Please login again.');
-            }
-            throw new Error(result.message);
-        }
-
-        uploadSuccess.style.display = 'flex';
-        clearFileSelection();
-        await Promise.all([loadFileInfo(), loadStatistics(), loadAllocations()]);
-
-        setTimeout(() => {
-            uploadSuccess.style.display = 'none';
-        }, 5000);
-    } catch (error) {
-        showError(error.message || 'Failed to upload file. Please try again.');
-    } finally {
-        uploadBtn.disabled = false;
-        uploadBtn.innerHTML = `
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
-                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Upload & Replace
-        `;
-    }
-}
-
 async function loadFileInfo() {
     try {
         const response = await fetch(INFO_API);
@@ -399,7 +239,7 @@ async function loadFileInfo() {
         lastModified.textContent = formatDate(result.data.modified * 1000);
         fileSize.textContent = formatFileSize(result.data.size);
     } catch (_error) {
-        currentFileName.textContent = 'data.csv';
+        currentFileName.textContent = 'list.csv';
         lastModified.textContent = 'Not available';
         fileSize.textContent = 'Not available';
     }
@@ -437,6 +277,7 @@ async function loadInventory() {
         tshirtInput.value = result.data.tShirt ?? 0;
         topThreeInput.value = result.data.topThreeCount ?? 30;
         topTwoInput.value = result.data.topTwoCount ?? 20;
+        updateGoodiesWidget(result.data);
     } catch (error) {
         showError(error.message || 'Unable to load inventory.');
     }
@@ -566,6 +407,17 @@ function showError(message) {
 function hideAlerts() {
     uploadSuccess.style.display = 'none';
     uploadError.style.display = 'none';
+}
+
+function updateGoodiesWidget(inventory) {
+    const bag = Number(inventory.bag ?? 0);
+    const bottle = Number(inventory.waterBottle ?? 0);
+    const tshirt = Number(inventory.tShirt ?? 0);
+
+    goodiesBag.textContent = bag;
+    goodiesBottle.textContent = bottle;
+    goodiesTshirt.textContent = tshirt;
+    goodiesTotal.textContent = bag + bottle + tshirt;
 }
 
 function escapeHTML(value) {
