@@ -29,7 +29,7 @@
                         <div class="stat-divider"></div>
                         <div class="stat-item">
                             <span class="stat-number" id="completedUsers">0</span>
-                            <span class="stat-label">Completed</span>
+                            <span class="stat-label">Allocated</span>
                         </div>
                     </div>
                 </div>
@@ -40,31 +40,10 @@
             <div class="container">
                 <div class="controls">
                     <div class="search-wrapper">
-                        <svg class="search-icon" viewBox="0 0 24 24" fill="none">
-                            <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-                            <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M21 21l-4.35-4.35M10.8 18a7.2 7.2 0 1 1 0-14.4 7.2 7.2 0 0 1 0 14.4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        <input 
-                            type="text" 
-                            id="searchInput" 
-                            class="search-input" 
-                            placeholder="Search participants..."
-                            autocomplete="off"
-                        >
-                    </div>
-                    <div class="filter-group">
-                        <button class="filter-btn active" data-filter="all">
-                            All
-                        </button>
-                        <button class="filter-btn" data-filter="completed" id="filterToggle">
-                            Completed <span class="filter-count" id="completedCount">0</span>
-                        </button>
-                        <button class="filter-btn" data-filter="redeemed">
-                            Redeemed <span class="filter-count" id="redeemedCount">0</span>
-                        </button>
-                        <button class="filter-btn" data-filter="not-redeemed"> 
-                            Not Redeemed <span class="filter-count" id="notRedeemedCount">0</span>
-                        </button>
+                        <input id="searchInput" class="search-input" type="search" placeholder="Search participant name..." aria-label="Search participants">
                     </div>
                 </div>
 
@@ -88,10 +67,7 @@
                                 <tr>
                                     <th class="th-rank">Rank</th>
                                     <th class="th-name">Participant</th>
-                                    <th class="th-center">Badges</th>
-                                    <th class="th-center">Games</th>
-                                    <th class="th-center">Redeemed</th>
-                                    <th class="th-status">Status</th>
+                                    <th class="th-center">Goodies Allocation</th>
                                 </tr>
                             </thead>
                             <tbody id="leaderboardBody">

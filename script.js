@@ -1,25 +1,17 @@
 let allUsers = [];
 let filteredUsers = [];
-let currentFilter = 'all';
-
-const searchInput = document.getElementById('searchInput');
-const filterButtons = document.querySelectorAll('.filter-btn');
 const leaderboardBody = document.getElementById('leaderboardBody');
 const loadingState = document.getElementById('loadingState');
 const emptyState = document.getElementById('emptyState');
 const totalUsersEl = document.getElementById('totalUsers');
 const completedUsersEl = document.getElementById('completedUsers');
 const lastUpdatedEl = document.getElementById('lastUpdated');
-const completedCountEl = document.getElementById('completedCount');
-const redeemedCountEl = document.getElementById('redeemedCount');
-const notRedeemedCountEl = document.getElementById('notRedeemedCount');
-const filterIndicator = document.querySelector('.filter-indicator');
+const searchInput = document.getElementById('searchInput');
 
 document.addEventListener('DOMContentLoaded', () => {
+    setupSearch();
     loadData();
-    setupEventListeners();
     updateLastUpdated();
-    initFilterIndicator();
 });
 
 async function loadData() {
@@ -37,8 +29,9 @@ async function loadData() {
         console.log('Loading data from secure API');
         allUsers = parseCSV(csvText);
         processUsers();
+        filteredUsers = [...allUsers];
         updateStats();
-        renderLeaderboard(allUsers);
+        renderLeaderboard(filteredUsers);
         updateLastUpdated(result.data.modified);
         
         // Smooth loading transition
@@ -135,6 +128,7 @@ function processUsers() {
 function renderLeaderboard(users) {
     if (users.length === 0) {
         showEmptyState(true);
+        leaderboardBody.innerHTML = '';
         return;
     }
     
@@ -161,30 +155,10 @@ function createUserRow(user, index) {
     nameTd.innerHTML = getUserInfoHTML(user);
     tr.appendChild(nameTd);
     
-    // Badges
-    const badgesTd = document.createElement('td');
-    badgesTd.className = 'td-center';
-    badgesTd.innerHTML = getBadgeCountHTML(user.badgesCount);
-    badgesTd.title = user.badgeNames || 'No badges completed';
-    tr.appendChild(badgesTd);
-    
-    // Games
-    const gamesTd = document.createElement('td');
-    gamesTd.className = 'td-center';
-    gamesTd.innerHTML = getGameCountHTML(user.gamesCount);
-    gamesTd.title = user.gameNames || 'No games completed';
-    tr.appendChild(gamesTd);
-    
-    // Redeemed
-    const codeTd = document.createElement('td');
-    codeTd.className = 'td-center';
-    codeTd.innerHTML = getRedeemedHTML(user.accessCodeRedeemed);
-    tr.appendChild(codeTd);
-    
-    // Status
-    const statusTd = document.createElement('td');
-    statusTd.innerHTML = getStatusHTML(user);
-    tr.appendChild(statusTd);
+    const allocationTd = document.createElement('td');
+    allocationTd.className = 'td-center';
+    allocationTd.innerHTML = getAllocationHTML(user);
+    tr.appendChild(allocationTd);
     
     return tr;
 }
@@ -226,134 +200,43 @@ function getUserInfoHTML(user) {
     `;
 }
 
-function getBadgeCountHTML(count) {
-    let className = 'badge-count';
-    if (count >= 15) {
-        className += ' very-high';
-    } else if (count >= 5) {
-        className += ' high';
+function getAllocationHTML(user) {
+    if (user.badgeNames && user.badgeNames.trim()) {
+        return `<div class="status completed">${formatAllocationWithEmoji(user.badgeNames)}</div>`;
     }
-    return `<div class="${className}">${count}</div>`;
+    return '<div class="status not-started">No Goodies</div>';
 }
 
-function getGameCountHTML(count) {
-    let className = 'badge-count';
-    if (count >= 1) {
-        className += ' high';
-    }
-    return `<div class="${className}">${count}</div>`;
-}
-
-function getRedeemedHTML(redeemed) {
-    if (redeemed) {
-        return '<div class="redeemed yes">✓</div>';
-    }
-    return '<div class="redeemed no">✗</div>';
-}
-
-function getStatusHTML(user) {
-    if (user.allCompleted) {
-        return '<div class="status completed">✓ Completed</div>';
-    } else if (user.badgesCount > 0 || user.gamesCount > 0) {
-        return '<div class="status in-progress">In Progress</div>';
-    }
-    return '<div class="status not-started">Not Started</div>';
-}
-
-function setupEventListeners() {
-    // Search with smooth animation
-    searchInput.addEventListener('input', debounce(applyFilters, 300));
-    
-    searchInput.addEventListener('focus', () => {
-        searchInput.parentElement.style.transform = 'scale(1.02)';
-    });
-    
-    searchInput.addEventListener('blur', () => {
-        searchInput.parentElement.style.transform = 'scale(1)';
-    });
-    
-    // Filter buttons with indicator animation
-    filterButtons.forEach((btn, index) => {
-        btn.addEventListener('click', () => {
-            filterButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentFilter = btn.dataset.filter;
-            
-            // Animate filter indicator
-            updateFilterIndicator(index);
-            
-            // Apply filters with stagger animation
-            applyFilters();
-        });
-    });
-}
-
-function initFilterIndicator() {
-    const activeBtn = document.querySelector('.filter-btn.active');
-    if (activeBtn && filterIndicator) {
-        const btnIndex = Array.from(filterButtons).indexOf(activeBtn);
-        updateFilterIndicator(btnIndex, false);
-    }
-}
-
-function updateFilterIndicator(index, animate = true) {
-    if (!filterIndicator) return;
-    
-    const btn = filterButtons[index];
-    const btnRect = btn.getBoundingClientRect();
-    const groupRect = btn.parentElement.getBoundingClientRect();
-    
-    const left = btnRect.left - groupRect.left + 4;
-    const width = btnRect.width - 8;
-    
-    if (!animate) {
-        filterIndicator.style.transition = 'none';
-    }
-    
-    filterIndicator.style.left = `${left}px`;
-    filterIndicator.style.width = `${width}px`;
-    
-    if (!animate) {
-        setTimeout(() => {
-            filterIndicator.style.transition = '';
-        }, 50);
-    }
-}
-
-function applyFilters() {
-    const query = searchInput.value.toLowerCase().trim();
-    let filtered = allUsers;
-    
-    if (query) {
-        filtered = filtered.filter(user => 
-            user.name.toLowerCase().includes(query) ||
-            user.email.toLowerCase().includes(query)
-        );
-    }
-    
-    if (currentFilter === 'completed') {
-        filtered = filtered.filter(user => user.allCompleted);
-    } else if (currentFilter === 'redeemed') {
-        filtered = filtered.filter(user => user.accessCodeRedeemed);
-    } else if (currentFilter === 'not-redeemed') {
-        filtered = filtered.filter(user => !user.accessCodeRedeemed);
-    }
-    
-    filteredUsers = filtered;
-    renderLeaderboard(filtered);
+function formatAllocationWithEmoji(text) {
+    const safe = escapeHTML(text);
+    return safe
+        .replace(/\bWater Bottle\b/g, '🧴 Water Bottle')
+        .replace(/\bT-Shirt\b/g, '👕 T-Shirt')
+        .replace(/\bBag\b/g, '🎒 Bag');
 }
 
 function updateStats() {
     const total = allUsers.length;
-    const completed = allUsers.filter(u => u.allCompleted).length;
-    const redeemed = allUsers.filter(u => u.accessCodeRedeemed).length;
-    const notRedeemed = allUsers.filter(u => !u.accessCodeRedeemed).length;
+    const allocated = allUsers.filter(u => (u.badgesCount || 0) > 0).length;
     
     animateValue(totalUsersEl, 0, total, 1500);
-    animateValue(completedUsersEl, 0, completed, 1500);
-    animateValue(completedCountEl, 0, completed, 1500);
-    animateValue(redeemedCountEl, 0, redeemed, 1500);
-    animateValue(notRedeemedCountEl, 0, notRedeemed, 1500);
+    animateValue(completedUsersEl, 0, allocated, 1500);
+}
+
+function setupSearch() {
+    if (!searchInput) return;
+
+    const onSearch = debounce(() => {
+        const query = (searchInput.value || '').trim().toLowerCase();
+
+        filteredUsers = query
+            ? allUsers.filter((user) => user.name.toLowerCase().includes(query))
+            : [...allUsers];
+
+        renderLeaderboard(filteredUsers);
+    }, 120);
+
+    searchInput.addEventListener('input', onSearch);
 }
 
 function animateValue(element, start, end, duration) {

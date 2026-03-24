@@ -1,7 +1,7 @@
 {
-  "bag": 100,
-  "waterBottle": 100,
-  "tShirt": 100,
+  "bag": 99,
+  "waterBottle": 99,
+  "tShirt": 99,
   "topThreeCount": 30,
-  "topTwoCount": 20
+  "topTwoCount": 50
 }

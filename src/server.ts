@@ -1,3 +1,4 @@
+import "dotenv/config";
 import cors from "cors";
 import express, { type NextFunction, type Request, type Response } from "express";
 import multer from "multer";
@@ -57,13 +58,16 @@ type AllocationParticipant = {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
+const isVercel = process.env.VERCEL === "1";
+const runtimeRoot = isVercel ? "/tmp/gdgocgu-csj" : rootDir;
 
 const csvPath = path.join(rootDir, "data.csv");
 const listCsvPath = path.join(rootDir, "list.csv");
-const backupDir = path.join(rootDir, "backups");
+const backupDir = path.join(runtimeRoot, "backups");
 const tokensPath = path.join(backupDir, "tokens.json");
 const inventoryPath = path.join(backupDir, "inventory.json");
-const adminPassword = process.env.ADMIN_PASSWORD ?? "gdg@admin2025";
+const adminPassword = process.env.ADMIN_PASSWORD ?? "";
+const adminDailyTokenSeed = process.env.ADMIN_DAILY_TOKEN_SEED ?? adminPassword;
 const maxFileSizeBytes = 10 * 1024 * 1024;
 const staticListMode = true;
 
@@ -95,6 +99,20 @@ app.get("/api/leaderboard", (_req, res) => {
   recent.push(now);
   leaderboardRateLimits.set(clientIp, recent);
 
+  if (staticListMode) {
+    if (!fs.existsSync(listCsvPath)) {
+      return sendResponse(res, false, "list.csv not available");
+    }
+
+    const listContent = fs.readFileSync(listCsvPath, "utf-8");
+    const csvContent = buildLeaderboardCsvFromList(listContent);
+
+    return sendResponse(res, true, "Data retrieved", {
+      content: csvContent,
+      modified: Math.floor(fs.statSync(listCsvPath).mtimeMs / 1000),
+    });
+  }
+
   if (!fs.existsSync(csvPath)) {
     return sendResponse(res, false, "Data not available");
   }
@@ -109,6 +127,37 @@ app.get("/api/leaderboard", (_req, res) => {
 });
 
 app.get("/api/stats", (_req, res) => {
+  if (staticListMode) {
+    if (!fs.existsSync(listCsvPath)) {
+      return sendResponse(res, false, "list.csv file not found");
+    }
+
+    const participants = parseAllocationParticipants(fs.readFileSync(listCsvPath, "utf-8"));
+    const total = participants.length;
+
+    return sendResponse(res, true, "Statistics retrieved", {
+      total,
+      completed: 0,
+      completedPercent: 0,
+      redeemed: 0,
+      redeemedPercent: 0,
+      inProgress: 0,
+      inProgressPercent: 0,
+      badges: {
+        total: 0,
+        average: 0,
+        max: 0,
+        highUsers: 0,
+      },
+      games: {
+        total: 0,
+        average: 0,
+        max: 0,
+        usersWithGames: 0,
+      },
+    });
+  }
+
   if (!fs.existsSync(csvPath)) {
     return sendResponse(res, false, "CSV file not found");
   }
@@ -184,6 +233,10 @@ app.get("/api/data", (req, res) => {
 });
 
 app.post("/api/admin/verify", (req, res) => {
+  if (!adminPassword) {
+    return sendResponse(res, false, "ADMIN_PASSWORD is not configured on server", undefined, 500);
+  }
+
   const password = String(req.body?.password ?? "");
   if (!password || password !== adminPassword) {
     return sendResponse(res, false, "Invalid password", undefined, 401);
@@ -372,9 +425,13 @@ app.get("*", (_req, res) => {
 });
 
 const port = Number(process.env.PORT ?? 3000);
-app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-});
+if (!isVercel) {
+  app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`);
+  });
+}
+
+export default app;
 
 function sendResponse<T>(
   res: Response,
@@ -426,7 +483,11 @@ function extractToken(req: Request): string {
 }
 
 function validateDailyAuthToken(authHeader: string): boolean {
-  const expectedToken = `Bearer ${crypto.createHash("sha256").update(`gdg@admin2025${todayISO()}`).digest("hex")}`;
+  if (!adminDailyTokenSeed) {
+    return false;
+  }
+
+  const expectedToken = `Bearer ${crypto.createHash("sha256").update(`${adminDailyTokenSeed}${todayISO()}`).digest("hex")}`;
   return authHeader === expectedToken;
 }
 
@@ -551,6 +612,49 @@ function removeEmailsFromCSV(csvText: string): string {
 
   return cleanedRows
     .map((row) => row.map((field) => `"${String(field ?? "").replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+}
+
+function buildLeaderboardCsvFromList(listCsvText: string): string {
+  const participants = parseAllocationParticipants(listCsvText);
+  const inventory = loadInventory();
+  const allocation = buildAllocations(participants, inventory);
+
+  const rows: string[][] = [
+    [
+      "User Name",
+      "User Email",
+      "Profile URL",
+      "Profile Status",
+      "Access Code Redeemed",
+      "All Completed",
+      "Badges Count",
+      "Badge Names",
+      "Games Count",
+      "Game Names",
+    ],
+  ];
+
+  for (const row of allocation.rows) {
+    const itemCount = row.items.length;
+    const itemText = row.items.join(" + ");
+
+    rows.push([
+      row.name,
+      "",
+      "",
+      "Active",
+      itemCount > 0 ? "Yes" : "No",
+      "No",
+      String(itemCount),
+      itemText,
+      "0",
+      "-",
+    ]);
+  }
+
+  return rows
+    .map((cols) => cols.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(","))
     .join("\n");
 }
 

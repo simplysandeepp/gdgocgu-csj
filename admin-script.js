@@ -21,6 +21,11 @@ let bagInput, bottleInput, tshirtInput, topThreeInput, topTwoInput;
 let saveInventoryBtn, refreshAllocationBtn;
 let allocationSummary, allocationTableBody;
 
+function setText(element, value) {
+    if (!element) return;
+    element.textContent = String(value);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeElements();
     checkSession();
@@ -100,12 +105,16 @@ function getToken() {
 
 function showLogin() {
     document.getElementById('loginScreen').style.display = 'flex';
-    adminDashboard.style.display = 'none';
+    if (adminDashboard) {
+        adminDashboard.style.display = 'none';
+    }
 }
 
 async function showDashboard() {
     document.getElementById('loginScreen').style.display = 'none';
-    adminDashboard.style.display = 'block';
+    if (adminDashboard) {
+        adminDashboard.style.display = 'block';
+    }
 
     await Promise.all([
         loadStatistics(),
@@ -115,13 +124,13 @@ async function showDashboard() {
 }
 
 function setupEventListeners() {
-    loginForm.addEventListener('submit', handleLogin);
-    logoutBtn.addEventListener('click', handleLogout);
+    if (loginForm) loginForm.addEventListener('submit', handleLogin);
+    if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
 
-    downloadBackup.addEventListener('click', handleDownloadBackup);
+    if (downloadBackup) downloadBackup.addEventListener('click', handleDownloadBackup);
 
-    saveInventoryBtn.addEventListener('click', handleSaveInventory);
-    refreshAllocationBtn.addEventListener('click', loadAllocations);
+    if (saveInventoryBtn) saveInventoryBtn.addEventListener('click', handleSaveInventory);
+    if (refreshAllocationBtn) refreshAllocationBtn.addEventListener('click', loadAllocations);
 }
 
 async function handleLogin(e) {
@@ -186,23 +195,6 @@ async function loadStatistics() {
         const stats = result.data;
 
         animateValue(document.getElementById('statTotal'), 0, stats.total, 900);
-        animateValue(document.getElementById('statCompleted'), 0, stats.completed, 900);
-        animateValue(document.getElementById('statInProgress'), 0, stats.inProgress, 900);
-        animateValue(document.getElementById('statRedeemed'), 0, stats.redeemed, 900);
-
-        document.getElementById('statCompletedPercent').textContent = `${stats.completedPercent}%`;
-        document.getElementById('statInProgressPercent').textContent = `${stats.inProgressPercent}%`;
-        document.getElementById('statRedeemedPercent').textContent = `${stats.redeemedPercent}%`;
-
-        animateValue(document.getElementById('totalBadges'), 0, stats.badges.total, 900);
-        document.getElementById('avgBadges').textContent = stats.badges.average;
-        document.getElementById('maxBadges').textContent = stats.badges.max;
-        animateValue(document.getElementById('highBadges'), 0, stats.badges.highUsers, 900);
-
-        animateValue(document.getElementById('totalGames'), 0, stats.games.total, 900);
-        document.getElementById('avgGames').textContent = stats.games.average;
-        document.getElementById('maxGames').textContent = stats.games.max;
-        animateValue(document.getElementById('usersWithGames'), 0, stats.games.usersWithGames, 900);
     } catch (error) {
         showError(error.message || 'Error loading statistics.');
     }
@@ -218,10 +210,10 @@ function animateValue(element, start, end, duration) {
     const timer = setInterval(() => {
         current += increment;
         if (current >= end) {
-            element.textContent = end;
+            setText(element, end);
             clearInterval(timer);
         } else {
-            element.textContent = Math.floor(current);
+            setText(element, Math.floor(current));
         }
     }, 16);
 }
@@ -235,13 +227,13 @@ async function loadFileInfo() {
             throw new Error(result.message || 'File info unavailable');
         }
 
-        currentFileName.textContent = result.data.filename;
-        lastModified.textContent = formatDate(result.data.modified * 1000);
-        fileSize.textContent = formatFileSize(result.data.size);
+        setText(currentFileName, result.data.filename);
+        setText(lastModified, formatDate(result.data.modified * 1000));
+        setText(fileSize, formatFileSize(result.data.size));
     } catch (_error) {
-        currentFileName.textContent = 'list.csv';
-        lastModified.textContent = 'Not available';
-        fileSize.textContent = 'Not available';
+        setText(currentFileName, 'list.csv');
+        setText(lastModified, 'Not available');
+        setText(fileSize, 'Not available');
     }
 }
 
@@ -318,11 +310,17 @@ async function handleSaveInventory() {
         }
 
         await loadAllocations();
-        uploadSuccess.style.display = 'flex';
-        uploadSuccess.querySelector('.alert-message').textContent = 'Inventory saved and allocation recomputed.';
+        if (uploadSuccess) {
+            uploadSuccess.style.display = 'flex';
+            const successMessage = uploadSuccess.querySelector('.alert-message');
+            setText(successMessage, 'Inventory saved and allocation recomputed.');
+        }
         setTimeout(() => {
-            uploadSuccess.style.display = 'none';
-            uploadSuccess.querySelector('.alert-message').textContent = 'The leaderboard data has been updated.';
+            if (uploadSuccess) {
+                uploadSuccess.style.display = 'none';
+                const successMessage = uploadSuccess.querySelector('.alert-message');
+                setText(successMessage, 'The leaderboard data has been updated.');
+            }
         }, 2800);
     } catch (error) {
         showError(error.message || 'Failed to save inventory.');
@@ -356,9 +354,9 @@ async function loadAllocations() {
             <div class="summary-chip">Top X all-3: <strong>${summary.topThreeCount}</strong></div>
             <div class="summary-chip">Next Y two-items: <strong>${summary.topTwoCount}</strong></div>
             <div class="summary-chip">Allocated: <strong>${summary.allocatedParticipants}</strong></div>
-            <div class="summary-chip">Bag: <strong>${summary.bagGiven}</strong></div>
-            <div class="summary-chip">Bottle: <strong>${summary.bottleGiven}</strong></div>
-            <div class="summary-chip">T-Shirt: <strong>${summary.tShirtGiven}</strong></div>
+            <div class="summary-chip">🎒 Bag: <strong>${summary.bagGiven}</strong></div>
+            <div class="summary-chip">🧴 Bottle: <strong>${summary.bottleGiven}</strong></div>
+            <div class="summary-chip">👕 T-Shirt: <strong>${summary.tShirtGiven}</strong></div>
             <div class="summary-chip">Left (B/Bo/T): <strong>${summary.inventoryLeft.bag}/${summary.inventoryLeft.waterBottle}/${summary.inventoryLeft.tShirt}</strong></div>
         `;
 
@@ -368,7 +366,7 @@ async function loadAllocations() {
             tr.innerHTML = `
                 <td>#${row.rank}</td>
                 <td>${escapeHTML(row.name)}</td>
-                <td>${row.items.length ? row.items.join(', ') : '-'}</td>
+                <td>${row.items.length ? formatItemsWithEmoji(row.items) : '-'}</td>
             `;
             allocationTableBody.appendChild(tr);
         });
@@ -400,13 +398,15 @@ function formatDate(timestamp) {
 }
 
 function showError(message) {
-    errorMessage.textContent = message;
-    uploadError.style.display = 'flex';
+    setText(errorMessage, message);
+    if (uploadError) {
+        uploadError.style.display = 'flex';
+    }
 }
 
 function hideAlerts() {
-    uploadSuccess.style.display = 'none';
-    uploadError.style.display = 'none';
+    if (uploadSuccess) uploadSuccess.style.display = 'none';
+    if (uploadError) uploadError.style.display = 'none';
 }
 
 function updateGoodiesWidget(inventory) {
@@ -414,10 +414,21 @@ function updateGoodiesWidget(inventory) {
     const bottle = Number(inventory.waterBottle ?? 0);
     const tshirt = Number(inventory.tShirt ?? 0);
 
-    goodiesBag.textContent = bag;
-    goodiesBottle.textContent = bottle;
-    goodiesTshirt.textContent = tshirt;
-    goodiesTotal.textContent = bag + bottle + tshirt;
+    setText(goodiesBag, bag);
+    setText(goodiesBottle, bottle);
+    setText(goodiesTshirt, tshirt);
+    setText(goodiesTotal, bag + bottle + tshirt);
+}
+
+function formatItemsWithEmoji(items) {
+    return items
+        .map((item) => {
+            if (item === 'Bag') return '🎒 Bag';
+            if (item === 'Water Bottle') return '🧴 Water Bottle';
+            if (item === 'T-Shirt') return '👕 T-Shirt';
+            return escapeHTML(item);
+        })
+        .join(' • ');
 }
 
 function escapeHTML(value) {

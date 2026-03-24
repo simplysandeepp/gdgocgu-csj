@@ -695,6 +695,12 @@ body {
     margin-bottom: var(--space-2);
 }
 
+.allocation-card {
+    background: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+    border: 1px solid #dce8ff;
+    box-shadow: 0 12px 30px rgba(41, 98, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
 .allocation-header p {
     color: var(--gray-600);
     font-size: 0.9375rem;
@@ -720,6 +726,17 @@ body {
     color: var(--gray-700);
 }
 
+.inventory-input-group .form-input {
+    background: linear-gradient(180deg, #ffffff 0%, #fdfefe 100%);
+    border-color: #d5dbe6;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.inventory-input-group .form-input:focus {
+    border-color: #4b78ff;
+    box-shadow: 0 0 0 4px rgba(75, 120, 255, 0.12), 0 6px 16px rgba(75, 120, 255, 0.12);
+}
+
 .allocation-actions {
     display: flex;
     gap: var(--space-3);
@@ -734,19 +751,28 @@ body {
 }
 
 .summary-chip {
-    background: var(--gray-100);
-    border: 1px solid var(--gray-200);
+    background: linear-gradient(135deg, #eef3ff 0%, #f5f8ff 100%);
+    border: 1px solid #d8e3ff;
     border-radius: var(--radius-full);
-    padding: var(--space-2) var(--space-4);
+    padding: var(--space-2) var(--space-5);
     font-size: 0.85rem;
-    color: var(--gray-800);
+    color: #2f426f;
+    font-weight: 500;
+    box-shadow: 0 1px 4px rgba(41, 98, 255, 0.08);
+    transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.summary-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(41, 98, 255, 0.14);
 }
 
 .allocation-table-wrapper {
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius);
+    border: 1px solid #dbe4f3;
+    border-radius: var(--radius-lg);
     overflow: auto;
     max-height: 380px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .allocation-table {
@@ -764,11 +790,19 @@ body {
 }
 
 .allocation-table th {
-    background: var(--gray-50);
+    background: linear-gradient(180deg, #f7f9ff 0%, #eff3ff 100%);
     font-weight: 700;
-    color: var(--gray-700);
+    color: #42506b;
     position: sticky;
     top: 0;
+}
+
+.allocation-table tbody tr {
+    transition: background-color var(--transition), transform var(--transition);
+}
+
+.allocation-table tbody tr:hover {
+    background: rgba(41, 98, 255, 0.04);
 }
 
 .actions-grid {

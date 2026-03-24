@@ -312,17 +312,18 @@ body {
 }
 
 .leaderboard {
-    background: var(--bg-surface);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-md);
-    overflow: hidden;
-    border: 1px solid var(--border-secondary);
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+    border: none;
 }
 
 .table-wrapper {
     overflow-x: auto;
-    max-height: 650px;
-    overflow-y: auto;
+    max-height: none;
+    overflow-y: visible;
+    width: 100%;
 }
 
 .table-wrapper::-webkit-scrollbar {
@@ -485,6 +486,7 @@ body {
     font-size: 1rem;
     line-height: 1.4;
     letter-spacing: -0.01em;
+    word-break: break-word;
 }
 
 .user-name:hover {
@@ -738,10 +740,6 @@ body {
         margin-left: var(--space-1);
     }
     
-    .table-wrapper {
-        max-height: 600px;
-    }
-    
     .table th,
     .table td {
         padding: var(--space-4);
@@ -878,12 +876,12 @@ body {
         padding: 0 var(--space-1);
     }
     
-    .leaderboard {
-        border-radius: var(--radius-lg);
+    .search-wrapper {
+        min-width: 100%;
     }
-    
-    .table-wrapper {
-        max-height: calc(100vh - 380px);
+
+    .leaderboard {
+        overflow: visible;
     }
     
     .table th,
@@ -949,6 +947,8 @@ body {
         padding: var(--space-2) var(--space-3);
         font-size: 0.75rem;
         gap: var(--space-1);
+        white-space: normal;
+        text-align: center;
     }
     
     .redeemed {

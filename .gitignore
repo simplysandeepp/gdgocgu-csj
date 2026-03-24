@@ -6,6 +6,7 @@ coverage/
 # Environment files
 .env
 .env.*
+!.env.example
 
 # Runtime data
 backups/*.csv
